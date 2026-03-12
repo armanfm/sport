@@ -1,39 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sport Club - Token</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #111;
+            color: white;
+            padding: 20px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 430px;
+            background: #2d2d2d;
+            padding: 36px 28px;
+            border-radius: 20px;
+            border: 3px solid #e53935;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.35);
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: 24px;
+            line-height: 1.25;
+        }
+
+        p {
+            margin: 0 0 24px;
+            font-size: 18px;
+        }
+
+        #btn {
+            background: #e53935;
+            color: white;
+            border: none;
+            padding: 16px 28px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 22px;
+            font-weight: bold;
+            width: 100%;
+            transition: opacity 0.2s ease;
+        }
+
+        #btn:hover {
+            opacity: 0.92;
+        }
+
+        #btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        #status {
+            margin-top: 22px;
+            font-size: 18px;
+            color: #ffeb3b;
+            white-space: pre-line;
+            word-break: break-word;
+            text-align: center;
+            line-height: 1.5;
+            min-height: 54px;
+        }
+
+        .small {
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>🦁 Sport Club do Recife</h1>
+    <p>Economia Tokenizada</p>
+    <button id="btn">CONECTAR CARTEIRA</button>
+    <div id="status">Clique para conectar sua carteira.</div>
+</div>
+
 <script>
-const btn = document.getElementById("btn");
-const status = document.getElementById("status");
+    const contractAddress = "0x2b1e32bfe330f423ce4ed85d7d4a5ebf8f7d15f8";
+    const abi = [
+        "function balanceOf(address owner) view returns (uint256)",
+        "function decimals() view returns (uint8)",
+        "function symbol() view returns (string)",
+        "function name() view returns (string)"
+    ];
 
-btn.onclick = async () => {
-    status.innerText = "Iniciando teste...";
+    const btn = document.getElementById("btn");
+    const statusEl = document.getElementById("status");
 
-    try {
-        if (!window.ethereum) {
-            status.innerText = "window.ethereum não existe";
-            return;
-        }
-
-        status.innerText = "MetaMask detectada";
-
-        const eth = window.ethereum.providers
-            ? window.ethereum.providers.find(p => p.isMetaMask)
-            : window.ethereum;
-
-        if (!eth) {
-            status.innerText = "Provider MetaMask não encontrado";
-            return;
-        }
-
-        status.innerText = "Provider encontrado. Lendo contas...";
-
-        const before = await eth.request({ method: "eth_accounts" });
-        status.innerText = "eth_accounts: " + JSON.stringify(before);
-
-        const accounts = await eth.request({ method: "eth_requestAccounts" });
-        status.innerText = "Conectado: " + JSON.stringify(accounts);
-    } catch (err) {
-        console.error(err);
-        status.innerText = "Erro: " + (err.code || "sem código") + " - " + err.message;
+    function setStatus(message) {
+        statusEl.innerText = message;
+        console.log(message);
     }
-};
+
+    function getEthereumProvider() {
+        if (!window.ethereum) return null;
+
+        if (Array.isArray(window.ethereum.providers) && window.ethereum.providers.length > 0) {
+            const metaMaskProvider = window.ethereum.providers.find(provider => provider.isMetaMask);
+            return metaMaskProvider || window.ethereum.providers[0];
+        }
+
+        return window.ethereum;
+    }
+
+    function shortenAddress(address) {
+        if (!address) return "";
+        return address.slice(0, 6) + "..." + address.slice(-4);
+    }
+
+    async function withTimeout(promise, ms, errorMessage) {
+        let timeoutId;
+
+        const timeoutPromise = new Promise((_, reject) => {
+            timeoutId = setTimeout(() => {
+                reject(new Error(errorMessage));
+            }, ms);
+        });
+
+        try {
+            const result = await Promise.race([promise, timeoutPromise]);
+            clearTimeout(timeoutId);
+            return result;
+        } catch (error) {
+            clearTimeout(timeoutId);
+            throw error;
+        }
+    }
+
+    async function switchToSepolia(ethereum) {
+        try {
+            await ethereum.request({
+                method: "wallet_switchEthereumChain",
+                params: [{ chainId: "0xaa36a7" }]
+            });
+            return true;
+        } catch (error) {
+            if (error.code === 4902) {
+                try {
+                    await ethereum.request({
+                        method: "wallet_addEthereumChain",
+                        params: [
+                            {
+                                chainId: "0xaa36a7",
+                                chainName: "Sepolia",
+                                nativeCurrency: {
+                                    name: "SepoliaETH",
+                                    symbol: "SEP",
+                                    decimals: 18
+                                },
+                                rpcUrls: ["https://rpc.sepolia.org"],
+                                blockExplorerUrls: ["https://sepolia.etherscan.io"]
+                            }
+                        ]
+                    });
+                    return true;
+                } catch (addError) {
+                    console.error("Erro ao adicionar Sepolia:", addError);
+                    return false;
+                }
+            }
+
+            console.error("Erro ao trocar para Sepolia:", error);
+            return false;
+        }
+    }
+
+    async function connectWallet() {
+        btn.disabled = true;
+
+        try {
+            const ethereum = getEthereumProvider();
+
+            if (!ethereum) {
+                setStatus("MetaMask não detectada.\nInstale ou habilite a extensão.");
+                return;
+            }
+
+            setStatus("Verificando carteira...");
+
+            const existingAccounts = await ethereum.request({
+                method: "eth_accounts"
+            });
+
+            let accounts = existingAccounts;
+
+            if (!accounts || accounts.length === 0) {
+                setStatus("Solicitando conexão da carteira...");
+
+                accounts = await withTimeout(
+                    ethereum.request({ method: "eth_requestAccounts" }),
+                    15000,
+                    "A MetaMask não respondeu a tempo. Abra a extensão e veja se existe uma solicitação pendente."
+                );
+            }
+
+            if (!accounts || accounts.length === 0) {
+                setStatus("Nenhuma conta conectada.");
+                return;
+            }
+
+            const address = accounts[0];
+
+            setStatus("Carteira conectada:\n" + address + "\nVerificando rede...");
+
+            const provider = new ethers.providers.Web3Provider(ethereum);
+            let network = await provider.getNetwork();
+
+            if (network.chainId !== 11155111) {
+                setStatus("Rede errada.\nTentando trocar para Sepolia...");
+
+                const switched = await switchToSepolia(ethereum);
+
+                if (!switched) {
+                    setStatus("Não consegui trocar para Sepolia.\nTroque manualmente na MetaMask.");
+                    return;
+                }
+
+                const newProvider = new ethers.providers.Web3Provider(ethereum);
+                network = await newProvider.getNetwork();
+
+                if (network.chainId !== 11155111) {
+                    setStatus("Ainda não está na Sepolia.\nTroque manualmente na MetaMask.");
+                    return;
+                }
+            }
+
+            btn.innerText = "CONECTADO";
+
+            setStatus(
+                "Carteira conectada:\n" +
+                shortenAddress(address) +
+                "\nLendo saldo do token..."
+            );
+
+            try {
+                const currentProvider = new ethers.providers.Web3Provider(ethereum);
+                const contract = new ethers.Contract(contractAddress, abi, currentProvider);
+
+                let decimals = 18;
+                let symbol = "TOKEN";
+                let tokenName = "Token";
+
+                try {
+                    decimals = await contract.decimals();
+                } catch (e) {
+                    console.warn("Não foi possível ler decimals(). Usando 18.");
+                }
+
+                try {
+                    symbol = await contract.symbol();
+                } catch (e) {
+                    console.warn("Não foi possível ler symbol().");
+                }
+
+                try {
+                    tokenName = await contract.name();
+                } catch (e) {
+                    console.warn("Não foi possível ler name().");
+                }
+
+                const balance = await contract.balanceOf(address);
+                const formattedBalance = ethers.utils.formatUnits(balance, decimals);
+
+                setStatus(
+                    "Carteira conectada:\n" +
+                    shortenAddress(address) +
+                    "\nRede: Sepolia" +
+                    "\nToken: " + tokenName +
+                    "\nSaldo: " + formattedBalance + " " + symbol
+                );
+            } catch (contractError) {
+                console.error("Erro ao ler contrato:", contractError);
+
+                setStatus(
+                    "Carteira conectada:\n" +
+                    shortenAddress(address) +
+                    "\nRede: Sepolia" +
+                    "\nErro ao ler o token.\n" +
+                    "Verifique se o contrato está correto e implantado nessa rede."
+                );
+            }
+        } catch (error) {
+            console.error("Erro geral:", error);
+
+            if (error.code === 4001) {
+                setStatus("Você recusou a conexão na MetaMask.");
+            } else if (error.code === -32002) {
+                setStatus("Já existe uma solicitação pendente na MetaMask.\nAbra a extensão e conclua ou cancele.");
+            } else {
+                setStatus("Erro: " + (error.message || "desconhecido"));
+            }
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    btn.addEventListener("click", connectWallet);
+
+    window.addEventListener("load", async () => {
+        try {
+            const ethereum = getEthereumProvider();
+
+            if (!ethereum) {
+                setStatus("Clique para conectar sua carteira.");
+                return;
+            }
+
+            const accounts = await ethereum.request({ method: "eth_accounts" });
+
+            if (accounts && accounts.length > 0) {
+                setStatus("Carteira já autorizada.\nClique para carregar os dados.");
+            } else {
+                setStatus("Clique para conectar sua carteira.");
+            }
+        } catch (error) {
+            console.error(error);
+            setStatus("Clique para conectar sua carteira.");
+        }
+    });
+
+    if (window.ethereum) {
+        window.ethereum.on("accountsChanged", (accounts) => {
+            console.log("accountsChanged:", accounts);
+
+            if (!accounts || accounts.length === 0) {
+                btn.innerText = "CONECTAR CARTEIRA";
+                setStatus("Carteira desconectada.");
+            } else {
+                btn.innerText = "CONECTADO";
+                setStatus("Conta alterada:\n" + accounts[0] + "\nClique novamente para atualizar o saldo.");
+            }
+        });
+
+        window.ethereum.on("chainChanged", () => {
+            window.location.reload();
+        });
+    }
 </script>
+
+</body>
+</html>
 
 
