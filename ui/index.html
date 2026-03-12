@@ -3,14 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <title>Sport Club - Token</title>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
 <style>
 
 body{
+font-family:Arial;
 background:#111;
 color:white;
-font-family:Arial;
 text-align:center;
 padding:40px;
 }
@@ -29,10 +30,10 @@ background:#d32f2f;
 color:white;
 border:none;
 padding:15px;
-margin:6px;
 border-radius:10px;
 cursor:pointer;
 font-size:18px;
+margin:5px;
 width:100%;
 }
 
@@ -61,7 +62,7 @@ margin-top:25px;
 <h1>🦁 Sport Club do Recife</h1>
 <p>Economia Tokenizada</p>
 
-<button id="connect">CONECTAR CARTEIRA</button>
+<button id="btn">CONECTAR CARTEIRA</button>
 
 <div id="status">Carteira não conectada</div>
 
@@ -93,7 +94,7 @@ margin-top:25px;
 <script>
 
 const TOKEN_ADDRESS = "0x2b1e32bfe330f423ce4ed85d7d4a5ebf8f7d15f8"
-const CLUB_ADDRESS = "COLOQUE_AQUI_A_CARTEIRA_DO_CLUBE"
+const CLUB_ADDRESS = "COLOQUE_AQUI_O_ENDERECO_DO_CLUBE"
 
 const ABI = [
 "function balanceOf(address owner) view returns (uint256)",
@@ -108,27 +109,22 @@ let address
 
 const status = document.getElementById("status")
 
-document.getElementById("connect").onclick = conectar
+document.getElementById('btn').onclick = async () => {
 
-async function conectar(){
-
-if(!window.ethereum){
-
-alert("MetaMask não encontrada")
+if (!window.ethereum) {
+alert("MetaMask não detectada")
 return
 }
 
-try{
-
-const accounts = await window.ethereum.request({
-method: "eth_requestAccounts"
-})
-
-address = accounts[0]
+try {
 
 provider = new ethers.providers.Web3Provider(window.ethereum)
 
+await provider.send("eth_requestAccounts", [])
+
 signer = provider.getSigner()
+
+address = await signer.getAddress()
 
 token = new ethers.Contract(TOKEN_ADDRESS, ABI, provider)
 
@@ -141,9 +137,11 @@ const saldo = ethers.utils.formatUnits(balance, decimals)
 status.innerText =
 "Carteira conectada:\n"+address+"\nSaldo: "+saldo+" TK"
 
-}catch(err){
+document.getElementById("btn").innerText = "CONECTADO"
 
-status.innerText = "Erro ao conectar: "+err.message
+} catch(err){
+
+alert("Erro: "+err.message)
 
 }
 
@@ -152,7 +150,6 @@ status.innerText = "Erro ao conectar: "+err.message
 async function gastar(valor){
 
 if(!signer){
-
 alert("Conecte a carteira primeiro")
 return
 }
@@ -183,5 +180,6 @@ alert("Erro: "+err.message)
 
 </body>
 </html>
+
 
 
