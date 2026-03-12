@@ -1,41 +1,39 @@
 <script>
 const btn = document.getElementById("btn");
-const statusEl = document.getElementById("status");
+const status = document.getElementById("status");
 
-btn.addEventListener("click", async () => {
-    if (!window.ethereum) {
-        statusEl.innerText = "MetaMask não detectada.";
-        return;
-    }
-
-    btn.disabled = true;
-    statusEl.innerText = "Solicitando conexão da carteira...";
+btn.onclick = async () => {
+    status.innerText = "Iniciando teste...";
 
     try {
-        console.log("Provider:", window.ethereum);
-
-        const accounts = await window.ethereum.request({
-            method: "eth_requestAccounts"
-        });
-
-        console.log("Accounts:", accounts);
-        statusEl.innerText = "Conectado: " + accounts[0];
-        btn.innerText = "CONECTADO";
-    } catch (err) {
-        console.error("Erro MetaMask:", err);
-
-        if (err.code === 4001) {
-            statusEl.innerText = "Você recusou a conexão na MetaMask.";
-        } else if (err.code === -32002) {
-            statusEl.innerText = "Já existe uma solicitação pendente na MetaMask. Abra a extensão e conclua ou cancele.";
-        } else {
-            statusEl.innerText = "Erro ao conectar: " + (err.message || "desconhecido");
+        if (!window.ethereum) {
+            status.innerText = "window.ethereum não existe";
+            return;
         }
-    } finally {
-        btn.disabled = false;
+
+        status.innerText = "MetaMask detectada";
+
+        const eth = window.ethereum.providers
+            ? window.ethereum.providers.find(p => p.isMetaMask)
+            : window.ethereum;
+
+        if (!eth) {
+            status.innerText = "Provider MetaMask não encontrado";
+            return;
+        }
+
+        status.innerText = "Provider encontrado. Lendo contas...";
+
+        const before = await eth.request({ method: "eth_accounts" });
+        status.innerText = "eth_accounts: " + JSON.stringify(before);
+
+        const accounts = await eth.request({ method: "eth_requestAccounts" });
+        status.innerText = "Conectado: " + JSON.stringify(accounts);
+    } catch (err) {
+        console.error(err);
+        status.innerText = "Erro: " + (err.code || "sem código") + " - " + err.message;
     }
-});
+};
 </script>
-</html>
 
 
