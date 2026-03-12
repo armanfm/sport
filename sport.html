@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Sport Club - Token</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <style>
+        body { font-family: 'Arial', sans-serif; text-align: center; padding: 50px; background: #1a1a1a; color: white; }
+        .card { background: #2d2d2d; padding: 40px; border-radius: 20px; border: 3px solid #d32f2f; display: inline-block; }
+        #btn { background: #d32f2f; color: white; border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-size: 20px; font-weight: bold; }
+        #status { margin-top: 20px; font-size: 22px; color: #ffeb3b; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>🦁 Sport Club do Recife</h1>
+    <p>Economia Tokenizada</p>
+    <button id="btn">CONECTAR CARTEIRA</button>
+    <div id="status"></div>
+</div>
+
+<script>
+    const contractAddress = "0x2b1e32bfe330f423ce4ed85d7d4a5ebf8f7d15f8";
+    const abi = ["function balanceOf(address owner) view returns (uint256)"];
+
+    document.getElementById('btn').onclick = async () => {
+        // Teste 1: O código rodou?
+        console.log("Botão apertado!");
+        
+        if (window.ethereum) {
+            try {
+                // Teste 2: Pedindo permissão
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                const signer = provider.getSigner();
+                const address = await signer.getAddress();
+                
+                // Teste 3: Lendo o saldo
+                const contract = new ethers.Contract(contractAddress, abi, provider);
+                const balance = await contract.balanceOf(address);
+                const finalBalance = ethers.utils.formatUnits(balance, 18);
+
+                document.getElementById('status').innerText = "Saldo: " + parseFloat(finalBalance).toLocaleString() + " TRC";
+                document.getElementById('btn').innerText = "CONECTADO";
+            } catch (err) {
+                alert("Você recusou a conexão ou deu erro: " + err.message);
+            }
+        } else {
+            alert("ERRO: O Chrome ainda não deixa eu ver o MetaMask. Verifique se a chave em 'Extensões' está AZUL e dê F5!");
+        }
+    };
+</script>
+</body>
+</html>
