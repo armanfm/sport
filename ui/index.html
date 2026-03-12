@@ -6,6 +6,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
 <style>
+
 body{
 background:#111;
 color:white;
@@ -49,6 +50,7 @@ white-space:pre-line;
 .section{
 margin-top:25px;
 }
+
 </style>
 </head>
 
@@ -59,25 +61,31 @@ margin-top:25px;
 <h1>🦁 Sport Club do Recife</h1>
 <p>Economia Tokenizada</p>
 
-<button onclick="connect()">CONECTAR CARTEIRA</button>
+<button id="connect">CONECTAR CARTEIRA</button>
 
 <div id="status">Carteira não conectada</div>
 
 <div class="section">
 <h2>Sócios</h2>
+
 <button onclick="gastar(30)">Sócio Simples - 30 TK</button>
 <button onclick="gastar(50)">Sócio Plus - 50 TK</button>
 <button onclick="gastar(100)">Sócio Super - 100 TK</button>
+
 </div>
 
 <div class="section">
 <h2>Loja</h2>
+
 <button onclick="gastar(200)">Comprar Camisa - 200 TK</button>
+
 </div>
 
 <div class="section">
 <h2>Demo</h2>
+
 <button onclick="gastar(100)">Votar Presidente - 100 TK</button>
+
 </div>
 
 </div>
@@ -98,50 +106,66 @@ let signer
 let token
 let address
 
-async function connect(){
+const status = document.getElementById("status")
+
+document.getElementById("connect").onclick = conectar
+
+async function conectar(){
 
 if(!window.ethereum){
+
 alert("MetaMask não encontrada")
 return
 }
 
-provider = new ethers.providers.Web3Provider(window.ethereum)
+try{
 
-await provider.send("eth_requestAccounts",[])
+const accounts = await window.ethereum.request({
+method: "eth_requestAccounts"
+})
+
+address = accounts[0]
+
+provider = new ethers.providers.Web3Provider(window.ethereum)
 
 signer = provider.getSigner()
 
-address = await signer.getAddress()
-
-token = new ethers.Contract(TOKEN_ADDRESS,ABI,provider)
+token = new ethers.Contract(TOKEN_ADDRESS, ABI, provider)
 
 const balance = await token.balanceOf(address)
 
 const decimals = await token.decimals()
 
-const formatted = ethers.utils.formatUnits(balance,decimals)
+const saldo = ethers.utils.formatUnits(balance, decimals)
 
-document.getElementById("status").innerText =
-"Carteira: "+address+"\nSaldo: "+formatted+" TK"
+status.innerText =
+"Carteira conectada:\n"+address+"\nSaldo: "+saldo+" TK"
+
+}catch(err){
+
+status.innerText = "Erro ao conectar: "+err.message
+
+}
 
 }
 
 async function gastar(valor){
 
 if(!signer){
+
 alert("Conecte a carteira primeiro")
 return
 }
+
+try{
 
 const tokenSigner = token.connect(signer)
 
 const decimals = await token.decimals()
 
-const amount = ethers.utils.parseUnits(valor.toString(),decimals)
+const amount = ethers.utils.parseUnits(valor.toString(), decimals)
 
-try{
-
-const tx = await tokenSigner.transfer(CLUB_ADDRESS,amount)
+const tx = await tokenSigner.transfer(CLUB_ADDRESS, amount)
 
 await tx.wait()
 
@@ -159,4 +183,5 @@ alert("Erro: "+err.message)
 
 </body>
 </html>
+
 
