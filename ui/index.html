@@ -1,360 +1,162 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sport Club - Token</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<title>Sport Club - Token</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #111;
-            color: white;
-            padding: 20px;
-        }
+<style>
+body{
+background:#111;
+color:white;
+font-family:Arial;
+text-align:center;
+padding:40px;
+}
 
-        .card {
-            width: 100%;
-            max-width: 430px;
-            background: #2d2d2d;
-            padding: 36px 28px;
-            border-radius: 20px;
-            border: 3px solid #e53935;
-            text-align: center;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.35);
-        }
+.card{
+background:#2d2d2d;
+padding:40px;
+border-radius:20px;
+border:3px solid #d32f2f;
+display:inline-block;
+max-width:500px;
+}
 
-        h1 {
-            margin: 0 0 10px;
-            font-size: 24px;
-            line-height: 1.25;
-        }
+button{
+background:#d32f2f;
+color:white;
+border:none;
+padding:15px;
+margin:6px;
+border-radius:10px;
+cursor:pointer;
+font-size:18px;
+width:100%;
+}
 
-        p {
-            margin: 0 0 24px;
-            font-size: 18px;
-        }
+button:hover{
+background:#ff3b3b;
+}
 
-        #btn {
-            background: #e53935;
-            color: white;
-            border: none;
-            padding: 16px 28px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 22px;
-            font-weight: bold;
-            width: 100%;
-            transition: opacity 0.2s ease;
-        }
+#status{
+margin-top:20px;
+font-size:18px;
+color:#ffeb3b;
+white-space:pre-line;
+}
 
-        #btn:hover {
-            opacity: 0.92;
-        }
-
-        #btn:disabled {
-            opacity: 0.65;
-            cursor: not-allowed;
-        }
-
-        #status {
-            margin-top: 22px;
-            font-size: 18px;
-            color: #ffeb3b;
-            white-space: pre-line;
-            word-break: break-word;
-            text-align: center;
-            line-height: 1.5;
-            min-height: 54px;
-        }
-
-        .small {
-            font-size: 15px;
-        }
-    </style>
+.section{
+margin-top:25px;
+}
+</style>
 </head>
+
 <body>
 
 <div class="card">
-    <h1>🦁 Sport Club do Recife</h1>
-    <p>Economia Tokenizada</p>
-    <button id="btn">CONECTAR CARTEIRA</button>
-    <div id="status">Clique para conectar sua carteira.</div>
+
+<h1>🦁 Sport Club do Recife</h1>
+<p>Economia Tokenizada</p>
+
+<button onclick="connect()">CONECTAR CARTEIRA</button>
+
+<div id="status">Carteira não conectada</div>
+
+<div class="section">
+<h2>Sócios</h2>
+<button onclick="gastar(30)">Sócio Simples - 30 TK</button>
+<button onclick="gastar(50)">Sócio Plus - 50 TK</button>
+<button onclick="gastar(100)">Sócio Super - 100 TK</button>
+</div>
+
+<div class="section">
+<h2>Loja</h2>
+<button onclick="gastar(200)">Comprar Camisa - 200 TK</button>
+</div>
+
+<div class="section">
+<h2>Demo</h2>
+<button onclick="gastar(100)">Votar Presidente - 100 TK</button>
+</div>
+
 </div>
 
 <script>
-    const contractAddress = "0x2b1e32bfe330f423ce4ed85d7d4a5ebf8f7d15f8";
-    const abi = [
-        "function balanceOf(address owner) view returns (uint256)",
-        "function decimals() view returns (uint8)",
-        "function symbol() view returns (string)",
-        "function name() view returns (string)"
-    ];
 
-    const btn = document.getElementById("btn");
-    const statusEl = document.getElementById("status");
+const TOKEN_ADDRESS = "0x2b1e32bfe330f423ce4ed85d7d4a5ebf8f7d15f8"
+const CLUB_ADDRESS = "COLOQUE_AQUI_A_CARTEIRA_DO_CLUBE"
 
-    function setStatus(message) {
-        statusEl.innerText = message;
-        console.log(message);
-    }
+const ABI = [
+"function balanceOf(address owner) view returns (uint256)",
+"function transfer(address to, uint amount) returns (bool)",
+"function decimals() view returns (uint8)"
+]
 
-    function getEthereumProvider() {
-        if (!window.ethereum) return null;
+let provider
+let signer
+let token
+let address
 
-        if (Array.isArray(window.ethereum.providers) && window.ethereum.providers.length > 0) {
-            const metaMaskProvider = window.ethereum.providers.find(provider => provider.isMetaMask);
-            return metaMaskProvider || window.ethereum.providers[0];
-        }
+async function connect(){
 
-        return window.ethereum;
-    }
+if(!window.ethereum){
+alert("MetaMask não encontrada")
+return
+}
 
-    function shortenAddress(address) {
-        if (!address) return "";
-        return address.slice(0, 6) + "..." + address.slice(-4);
-    }
+provider = new ethers.providers.Web3Provider(window.ethereum)
 
-    async function withTimeout(promise, ms, errorMessage) {
-        let timeoutId;
+await provider.send("eth_requestAccounts",[])
 
-        const timeoutPromise = new Promise((_, reject) => {
-            timeoutId = setTimeout(() => {
-                reject(new Error(errorMessage));
-            }, ms);
-        });
+signer = provider.getSigner()
 
-        try {
-            const result = await Promise.race([promise, timeoutPromise]);
-            clearTimeout(timeoutId);
-            return result;
-        } catch (error) {
-            clearTimeout(timeoutId);
-            throw error;
-        }
-    }
+address = await signer.getAddress()
 
-    async function switchToSepolia(ethereum) {
-        try {
-            await ethereum.request({
-                method: "wallet_switchEthereumChain",
-                params: [{ chainId: "0xaa36a7" }]
-            });
-            return true;
-        } catch (error) {
-            if (error.code === 4902) {
-                try {
-                    await ethereum.request({
-                        method: "wallet_addEthereumChain",
-                        params: [
-                            {
-                                chainId: "0xaa36a7",
-                                chainName: "Sepolia",
-                                nativeCurrency: {
-                                    name: "SepoliaETH",
-                                    symbol: "SEP",
-                                    decimals: 18
-                                },
-                                rpcUrls: ["https://rpc.sepolia.org"],
-                                blockExplorerUrls: ["https://sepolia.etherscan.io"]
-                            }
-                        ]
-                    });
-                    return true;
-                } catch (addError) {
-                    console.error("Erro ao adicionar Sepolia:", addError);
-                    return false;
-                }
-            }
+token = new ethers.Contract(TOKEN_ADDRESS,ABI,provider)
 
-            console.error("Erro ao trocar para Sepolia:", error);
-            return false;
-        }
-    }
+const balance = await token.balanceOf(address)
 
-    async function connectWallet() {
-        btn.disabled = true;
+const decimals = await token.decimals()
 
-        try {
-            const ethereum = getEthereumProvider();
+const formatted = ethers.utils.formatUnits(balance,decimals)
 
-            if (!ethereum) {
-                setStatus("MetaMask não detectada.\nInstale ou habilite a extensão.");
-                return;
-            }
+document.getElementById("status").innerText =
+"Carteira: "+address+"\nSaldo: "+formatted+" TK"
 
-            setStatus("Verificando carteira...");
+}
 
-            const existingAccounts = await ethereum.request({
-                method: "eth_accounts"
-            });
+async function gastar(valor){
 
-            let accounts = existingAccounts;
+if(!signer){
+alert("Conecte a carteira primeiro")
+return
+}
 
-            if (!accounts || accounts.length === 0) {
-                setStatus("Solicitando conexão da carteira...");
+const tokenSigner = token.connect(signer)
 
-                accounts = await withTimeout(
-                    ethereum.request({ method: "eth_requestAccounts" }),
-                    15000,
-                    "A MetaMask não respondeu a tempo. Abra a extensão e veja se existe uma solicitação pendente."
-                );
-            }
+const decimals = await token.decimals()
 
-            if (!accounts || accounts.length === 0) {
-                setStatus("Nenhuma conta conectada.");
-                return;
-            }
+const amount = ethers.utils.parseUnits(valor.toString(),decimals)
 
-            const address = accounts[0];
+try{
 
-            setStatus("Carteira conectada:\n" + address + "\nVerificando rede...");
+const tx = await tokenSigner.transfer(CLUB_ADDRESS,amount)
 
-            const provider = new ethers.providers.Web3Provider(ethereum);
-            let network = await provider.getNetwork();
+await tx.wait()
 
-            if (network.chainId !== 11155111) {
-                setStatus("Rede errada.\nTentando trocar para Sepolia...");
+alert("Pagamento enviado!")
 
-                const switched = await switchToSepolia(ethereum);
+}catch(err){
 
-                if (!switched) {
-                    setStatus("Não consegui trocar para Sepolia.\nTroque manualmente na MetaMask.");
-                    return;
-                }
+alert("Erro: "+err.message)
 
-                const newProvider = new ethers.providers.Web3Provider(ethereum);
-                network = await newProvider.getNetwork();
+}
 
-                if (network.chainId !== 11155111) {
-                    setStatus("Ainda não está na Sepolia.\nTroque manualmente na MetaMask.");
-                    return;
-                }
-            }
+}
 
-            btn.innerText = "CONECTADO";
-
-            setStatus(
-                "Carteira conectada:\n" +
-                shortenAddress(address) +
-                "\nLendo saldo do token..."
-            );
-
-            try {
-                const currentProvider = new ethers.providers.Web3Provider(ethereum);
-                const contract = new ethers.Contract(contractAddress, abi, currentProvider);
-
-                let decimals = 18;
-                let symbol = "TOKEN";
-                let tokenName = "Token";
-
-                try {
-                    decimals = await contract.decimals();
-                } catch (e) {
-                    console.warn("Não foi possível ler decimals(). Usando 18.");
-                }
-
-                try {
-                    symbol = await contract.symbol();
-                } catch (e) {
-                    console.warn("Não foi possível ler symbol().");
-                }
-
-                try {
-                    tokenName = await contract.name();
-                } catch (e) {
-                    console.warn("Não foi possível ler name().");
-                }
-
-                const balance = await contract.balanceOf(address);
-                const formattedBalance = ethers.utils.formatUnits(balance, decimals);
-
-                setStatus(
-                    "Carteira conectada:\n" +
-                    shortenAddress(address) +
-                    "\nRede: Sepolia" +
-                    "\nToken: " + tokenName +
-                    "\nSaldo: " + formattedBalance + " " + symbol
-                );
-            } catch (contractError) {
-                console.error("Erro ao ler contrato:", contractError);
-
-                setStatus(
-                    "Carteira conectada:\n" +
-                    shortenAddress(address) +
-                    "\nRede: Sepolia" +
-                    "\nErro ao ler o token.\n" +
-                    "Verifique se o contrato está correto e implantado nessa rede."
-                );
-            }
-        } catch (error) {
-            console.error("Erro geral:", error);
-
-            if (error.code === 4001) {
-                setStatus("Você recusou a conexão na MetaMask.");
-            } else if (error.code === -32002) {
-                setStatus("Já existe uma solicitação pendente na MetaMask.\nAbra a extensão e conclua ou cancele.");
-            } else {
-                setStatus("Erro: " + (error.message || "desconhecido"));
-            }
-        } finally {
-            btn.disabled = false;
-        }
-    }
-
-    btn.addEventListener("click", connectWallet);
-
-    window.addEventListener("load", async () => {
-        try {
-            const ethereum = getEthereumProvider();
-
-            if (!ethereum) {
-                setStatus("Clique para conectar sua carteira.");
-                return;
-            }
-
-            const accounts = await ethereum.request({ method: "eth_accounts" });
-
-            if (accounts && accounts.length > 0) {
-                setStatus("Carteira já autorizada.\nClique para carregar os dados.");
-            } else {
-                setStatus("Clique para conectar sua carteira.");
-            }
-        } catch (error) {
-            console.error(error);
-            setStatus("Clique para conectar sua carteira.");
-        }
-    });
-
-    if (window.ethereum) {
-        window.ethereum.on("accountsChanged", (accounts) => {
-            console.log("accountsChanged:", accounts);
-
-            if (!accounts || accounts.length === 0) {
-                btn.innerText = "CONECTAR CARTEIRA";
-                setStatus("Carteira desconectada.");
-            } else {
-                btn.innerText = "CONECTADO";
-                setStatus("Conta alterada:\n" + accounts[0] + "\nClique novamente para atualizar o saldo.");
-            }
-        });
-
-        window.ethereum.on("chainChanged", () => {
-            window.location.reload();
-        });
-    }
 </script>
 
 </body>
 </html>
-
 
