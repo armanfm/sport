@@ -25,7 +25,7 @@
 
         .card {
             width: 100%;
-            max-width: 520px;
+            max-width: 600px;
             background: #2d2d2d;
             border: 3px solid #d32f2f;
             border-radius: 20px;
@@ -47,9 +47,12 @@
         h2 {
             margin: 22px 0 10px;
             font-size: 20px;
+            color: #d32f2f;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
         }
 
-        input, button {
+        input, button, select {
             width: 100%;
             border: none;
             border-radius: 12px;
@@ -58,14 +61,14 @@
             margin-top: 8px;
         }
 
-        input {
+        input, select {
             background: #1b1b1b;
             color: #fff;
             border: 1px solid #444;
             outline: none;
         }
 
-        input:focus {
+        input:focus, select:focus {
             border-color: #d32f2f;
         }
 
@@ -86,16 +89,71 @@
             cursor: not-allowed;
         }
 
+        button.compra {
+            background: #2e7d32;
+        }
+
+        button.compra:hover {
+            background: #1b5e20;
+        }
+
+        button.venda {
+            background: #ed6c02;
+        }
+
+        button.venda:hover {
+            background: #b26a00;
+        }
+
+        button.transferir {
+            background: #0288d1;
+        }
+
+        button.transferir:hover {
+            background: #01579b;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .input-group input {
+            flex: 1;
+            margin-top: 0;
+        }
+
+        .input-group button {
+            width: auto;
+            padding: 14px 20px;
+            margin-top: 0;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
         #status {
             margin-top: 16px;
             color: #ffeb3b;
             white-space: pre-line;
             word-break: break-word;
             line-height: 1.5;
-            min-height: 60px;
+            min-height: 80px;
             padding: 10px;
             background: rgba(0, 0, 0, 0.2);
             border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .saldo-destaque {
+            font-size: 18px;
+            color: #4caf50;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -108,23 +166,61 @@
         
         <div id="status">Clique para conectar sua carteira.</div>
         
-        <h2>Carteira do Clube</h2>
+        <h2>💰 Comprar Tokens</h2>
+        <div class="input-group">
+            <input id="quantidadeCompra" type="number" min="1" value="100" placeholder="Quantidade de TK" />
+            <button class="compra" onclick="comprarTokens()">COMPRAR</button>
+        </div>
+        <p style="font-size: 14px; margin-top: 5px; color: #aaa;">1 TK = R$ 1,00 (taxa 0%)</p>
+        
+        <h2>💸 Vender Tokens (Resgatar)</h2>
+        <div class="input-group">
+            <input id="quantidadeVenda" type="number" min="1" value="50" placeholder="Quantidade de TK" />
+            <button class="venda" onclick="venderTokens()">VENDER</button>
+        </div>
+        <p style="font-size: 14px; margin-top: 5px; color: #aaa;">Resgate por R$ 0,95 por TK (taxa 5%)</p>
+        
+        <h2>🔄 Transferir Tokens</h2>
+        <input id="enderecoTransferencia" type="text" 
+               placeholder="Endereço da carteira de destino (0x...)" 
+               spellcheck="false" 
+               autocomplete="off" />
+        <div class="input-group">
+            <input id="quantidadeTransferencia" type="number" min="1" value="10" placeholder="Quantidade" />
+            <button class="transferir" onclick="transferirTokens()">TRANSFERIR</button>
+        </div>
+        
+        <h2>🏦 Carteira do Clube</h2>
         <input id="clubAddress" type="text" 
-               placeholder="0x..." 
+               placeholder="Endereço para pagamentos ao clube" 
                spellcheck="false" 
                autocomplete="off" 
-               value="" />
+               value="0x2b1e32bfe330f423ce4ed85d7d4a5ebf8f7d15f8" />
         
-        <h2>Sócios</h2>
-        <button onclick="gastar(30)">Sócio Simples - 30 TK</button>
-        <button onclick="gastar(50)">Sócio Plus - 50 TK</button>
-        <button onclick="gastar(100)">Sócio Super - 100 TK</button>
+        <h2>👥 Planos de Sócio</h2>
+        <div class="grid-2">
+            <button onclick="gastar(30)">Sócio Simples<br><small>30 TK</small></button>
+            <button onclick="gastar(50)">Sócio Plus<br><small>50 TK</small></button>
+            <button onclick="gastar(100)">Sócio Super<br><small>100 TK</small></button>
+        </div>
         
-        <h2>Loja</h2>
-        <button onclick="gastar(200)">Comprar Camisa - 200 TK</button>
+        <h2>🛍️ Loja & Serviços</h2>
+        <div class="grid-2">
+            <button onclick="gastar(200)">Camisa Oficial<br><small>200 TK</small></button>
+            <button onclick="gastar(150)">Cachecol<br><small>150 TK</small></button>
+            <button onclick="gastar(80)">Caneca<br><small>80 TK</small></button>
+            <button onclick="gastar(300)">Ingresso Mensal<br><small>300 TK</small></button>
+        </div>
         
-        <h2>Demo</h2>
-        <button onclick="gastar(100)">Votar Presidente - 100 TK</button>
+        <h2>🗳️ Democracia do Clube</h2>
+        <div class="grid-2">
+            <button onclick="gastar(100)">Votar Presidente<br><small>100 TK</small></button>
+            <button onclick="gastar(50)">Votar Conselho<br><small>50 TK</small></button>
+        </div>
+        
+        <p style="margin-top: 20px; font-size: 12px; color: #666;">
+            ⚡ Tokens do Sport Club - Use, transfira ou resgate quando quiser
+        </p>
     </div>
 
     <script>
@@ -141,6 +237,10 @@
         const btnConnect = document.getElementById("btnConnect");
         const statusEl = document.getElementById("status");
         const clubAddressInput = document.getElementById("clubAddress");
+        const quantidadeCompraInput = document.getElementById("quantidadeCompra");
+        const quantidadeVendaInput = document.getElementById("quantidadeVenda");
+        const enderecoTransferenciaInput = document.getElementById("enderecoTransferencia");
+        const quantidadeTransferenciaInput = document.getElementById("quantidadeTransferencia");
 
         // Estado da aplicação
         let provider = null;
@@ -151,6 +251,9 @@
         let tokenDecimals = 18;
         let tokenSymbol = "TK";
         let connecting = false;
+
+        // Endereço do "caixa" do clube (quem emite/vende os tokens)
+        const CLUB_TREASURY = "0x2b1e32bfe330f423ce4ed85d7d4a5ebf8f7d15f8";
 
         // Utilitários
         function setStatus(text) {
@@ -223,16 +326,20 @@
             try {
                 const balance = await tokenRead.balanceOf(userAddress);
                 const formatted = ethers.utils.formatUnits(balance, tokenDecimals);
+                const valorEmReais = Number(formatted) * 0.95; // Taxa de venda
                 
                 setStatus(
-                    "Carteira conectada:\n" +
-                    shortAddress(userAddress) +
-                    "\nRede: Sepolia" +
-                    "\nSaldo: " + 
+                    "✅ Carteira conectada: " + shortAddress(userAddress) +
+                    "\n📊 Rede: Sepolia" +
+                    "\n💰 Saldo: " + 
                     Number(formatted).toLocaleString("pt-BR", { 
-                        maximumFractionDigits: 4 
-                    }) + 
-                    " " + tokenSymbol
+                        maximumFractionDigits: 2 
+                    }) + " " + tokenSymbol +
+                    "\n💵 Valor de resgate: R$ " + 
+                    valorEmReais.toLocaleString("pt-BR", { 
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2 
+                    })
                 );
             } catch (error) {
                 console.error("Erro ao atualizar saldo:", error);
@@ -245,7 +352,7 @@
             const ethereum = getMetaMaskProvider();
             
             if (!ethereum) {
-                setStatus("MetaMask não detectada. Instale a extensão.");
+                setStatus("❌ MetaMask não detectada. Instale a extensão.");
                 return;
             }
 
@@ -253,12 +360,12 @@
             btnConnect.disabled = true;
 
             try {
-                setStatus("Verificando carteira...");
+                setStatus("⏳ Verificando carteira...");
                 
                 let accounts = await ethereum.request({ method: "eth_accounts" });
                 
                 if (!accounts || accounts.length === 0) {
-                    setStatus("Solicitando conexão da carteira...");
+                    setStatus("⏳ Solicitando conexão da carteira...");
                     
                     accounts = await withTimeout(
                         ethereum.request({ method: "eth_requestAccounts" }),
@@ -268,7 +375,7 @@
                 }
 
                 if (!accounts || accounts.length === 0) {
-                    setStatus("Nenhuma conta conectada.");
+                    setStatus("❌ Nenhuma conta conectada.");
                     return;
                 }
 
@@ -279,12 +386,12 @@
                 let network = await provider.getNetwork();
                 
                 if (network.chainId !== 11155111) {
-                    setStatus("Rede errada. Tentando trocar para Sepolia...");
+                    setStatus("⏳ Rede errada. Tentando trocar para Sepolia...");
                     
                     const ok = await switchToSepolia(ethereum);
                     
                     if (!ok) {
-                        setStatus("Não foi possível trocar para Sepolia.");
+                        setStatus("❌ Não foi possível trocar para Sepolia.");
                         return;
                     }
 
@@ -293,7 +400,7 @@
                     network = await provider.getNetwork();
 
                     if (network.chainId !== 11155111) {
-                        setStatus("Ainda não está na Sepolia.");
+                        setStatus("❌ Ainda não está na Sepolia.");
                         return;
                     }
                 }
@@ -313,18 +420,18 @@
                     tokenSymbol = "TK";
                 }
 
-                btnConnect.innerText = "CONECTADO";
+                btnConnect.innerText = "✅ CONECTADO";
                 await atualizarSaldo();
 
             } catch (err) {
                 console.error(err);
                 
                 if (err.code === 4001) {
-                    setStatus("Você recusou a conexão na MetaMask.");
+                    setStatus("❌ Você recusou a conexão na MetaMask.");
                 } else if (err.code === -32002) {
-                    setStatus("Solicitação pendente na MetaMask. Abra a extensão.");
+                    setStatus("⏳ Solicitação pendente na MetaMask. Abra a extensão.");
                 } else {
-                    setStatus("Erro ao conectar: " + (err.message || "desconhecido"));
+                    setStatus("❌ Erro ao conectar: " + (err.message || "desconhecido"));
                 }
                 
             } finally {
@@ -333,6 +440,163 @@
             }
         }
 
+        // FUNÇÃO: Comprar tokens (simulação)
+        async function comprarTokens() {
+            if (!tokenWrite || !userAddress) {
+                alert("Conecte a carteira primeiro.");
+                return;
+            }
+
+            const quantidade = quantidadeCompraInput.value.trim();
+            
+            if (!quantidade || parseInt(quantidade) <= 0) {
+                alert("Digite uma quantidade válida.");
+                return;
+            }
+
+            try {
+                setStatus("⏳ Processando compra de " + quantidade + " " + tokenSymbol + "...");
+                
+                // SIMULAÇÃO de compra
+                setTimeout(() => {
+                    setStatus(
+                        "✅ Compra realizada com sucesso!\n" +
+                        "Você pagou: R$ " + quantidade + "\n" +
+                        "Recebeu: " + quantidade + " " + tokenSymbol + "\n\n" +
+                        "Em produção, isso seria uma transação real no contrato."
+                    );
+                    
+                    alert("✅ Compra simulada! Você pagou R$ " + quantidade + 
+                          " e recebeu " + quantidade + " " + tokenSymbol);
+                }, 2000);
+
+            } catch (err) {
+                console.error(err);
+                setStatus("❌ Erro na compra: " + (err.message || "desconhecido"));
+                alert("Erro: " + (err.message || "desconhecido"));
+            }
+        }
+
+        // FUNÇÃO: Vender tokens (resgatar por dinheiro)
+        async function venderTokens() {
+            if (!tokenWrite || !userAddress) {
+                alert("Conecte a carteira primeiro.");
+                return;
+            }
+
+            const quantidade = quantidadeVendaInput.value.trim();
+            
+            if (!quantidade || parseInt(quantidade) <= 0) {
+                alert("Digite uma quantidade válida.");
+                return;
+            }
+
+            try {
+                // Verifica se tem saldo suficiente
+                const balance = await tokenRead.balanceOf(userAddress);
+                const saldoAtual = ethers.utils.formatUnits(balance, tokenDecimals);
+                
+                if (parseFloat(saldoAtual) < parseFloat(quantidade)) {
+                    alert("Saldo insuficiente! Você tem apenas " + saldoAtual + " " + tokenSymbol);
+                    return;
+                }
+
+                const amount = ethers.utils.parseUnits(String(quantidade), tokenDecimals);
+                const valorResgate = parseFloat(quantidade) * 0.95; // 5% de taxa
+                
+                setStatus(
+                    "⏳ Processando venda de " + quantidade + " " + tokenSymbol + "...\n" +
+                    "Valor de resgate: R$ " + valorResgate.toFixed(2)
+                );
+                
+                // SIMULAÇÃO de venda (transferir tokens de volta para o clube)
+                // Em produção, aqui você transferiria os tokens para o tesouro do clube
+                // e receberia ETH ou stablecoins de volta
+                
+                setTimeout(() => {
+                    setStatus(
+                        "✅ Venda simulada com sucesso!\n" +
+                        "Você vendeu: " + quantidade + " " + tokenSymbol + "\n" +
+                        "Recebeu: R$ " + valorResgate.toFixed(2) + "\n" +
+                        "Taxa do clube (5%): R$ " + (parseFloat(quantidade) * 0.05).toFixed(2)
+                    );
+                    
+                    alert("✅ Venda simulada! Você receberia R$ " + valorResgate.toFixed(2) + 
+                          " na sua conta (taxa de 5% do clube)");
+                }, 2000);
+
+            } catch (err) {
+                console.error(err);
+                setStatus("❌ Erro na venda: " + (err.message || "desconhecido"));
+                alert("Erro: " + (err.message || "desconhecido"));
+            }
+        }
+
+        // FUNÇÃO: Transferir tokens para outra carteira
+        async function transferirTokens() {
+            if (!tokenWrite || !userAddress) {
+                alert("Conecte a carteira primeiro.");
+                return;
+            }
+
+            const enderecoDestino = enderecoTransferenciaInput.value.trim();
+            const quantidade = quantidadeTransferenciaInput.value.trim();
+            
+            if (!ethers.utils.isAddress(enderecoDestino)) {
+                alert("Digite um endereço válido para transferência.");
+                return;
+            }
+
+            if (!quantidade || parseInt(quantidade) <= 0) {
+                alert("Digite uma quantidade válida.");
+                return;
+            }
+
+            try {
+                // Verifica saldo
+                const balance = await tokenRead.balanceOf(userAddress);
+                const saldoAtual = ethers.utils.formatUnits(balance, tokenDecimals);
+                
+                if (parseFloat(saldoAtual) < parseFloat(quantidade)) {
+                    alert("Saldo insuficiente! Você tem apenas " + saldoAtual + " " + tokenSymbol);
+                    return;
+                }
+
+                const amount = ethers.utils.parseUnits(String(quantidade), tokenDecimals);
+                
+                setStatus(
+                    "⏳ Transferindo " + quantidade + " " + tokenSymbol + 
+                    " para " + shortAddress(enderecoDestino) + "..."
+                );
+                
+                // TRANSFERÊNCIA REAL (quando conectado a um contrato real)
+                // const tx = await tokenWrite.transfer(enderecoDestino, amount);
+                
+                // SIMULAÇÃO (para demonstração)
+                setTimeout(() => {
+                    setStatus(
+                        "✅ Transferência simulada com sucesso!\n" +
+                        "Enviado: " + quantidade + " " + tokenSymbol + "\n" +
+                        "Para: " + shortAddress(enderecoDestino) + "\n\n" +
+                        "Em produção, isso seria uma transação real na blockchain."
+                    );
+                    
+                    alert("✅ Transferência simulada! " + quantidade + " " + tokenSymbol + 
+                          " enviados para " + shortAddress(enderecoDestino));
+                    
+                    // Limpar campos
+                    enderecoTransferenciaInput.value = "";
+                    quantidadeTransferenciaInput.value = "10";
+                }, 2000);
+
+            } catch (err) {
+                console.error(err);
+                setStatus("❌ Erro na transferência: " + (err.message || "desconhecido"));
+                alert("Erro: " + (err.message || "desconhecido"));
+            }
+        }
+
+        // FUNÇÃO: Gastar tokens com produtos/serviços
         async function gastar(valor) {
             if (!tokenWrite || !userAddress) {
                 alert("Conecte a carteira primeiro.");
@@ -347,26 +611,37 @@
             }
 
             try {
+                // Verifica saldo
+                const balance = await tokenRead.balanceOf(userAddress);
+                const saldoAtual = ethers.utils.formatUnits(balance, tokenDecimals);
+                
+                if (parseFloat(saldoAtual) < valor) {
+                    alert("Saldo insuficiente! Você tem apenas " + saldoAtual + " " + tokenSymbol);
+                    return;
+                }
+
                 const amount = ethers.utils.parseUnits(String(valor), tokenDecimals);
                 
-                setStatus("Enviando " + valor + " " + tokenSymbol + "...");
+                setStatus("⏳ Enviando " + valor + " " + tokenSymbol + "...");
                 
+                // TRANSFERÊNCIA REAL
                 const tx = await tokenWrite.transfer(clubAddress, amount);
                 
                 setStatus(
-                    "Transação enviada.\n" +
+                    "⏳ Transação enviada.\n" +
                     "Hash: " + tx.hash + "\n" +
                     "Aguardando confirmação..."
                 );
 
                 await tx.wait();
                 
-                alert("Pagamento enviado com sucesso!");
+                setStatus("✅ Pagamento confirmado!");
+                alert("✅ Pagamento de " + valor + " " + tokenSymbol + " realizado com sucesso!");
                 await atualizarSaldo();
 
             } catch (err) {
                 console.error(err);
-                setStatus("Erro no pagamento: " + (err.message || "desconhecido"));
+                setStatus("❌ Erro no pagamento: " + (err.message || "desconhecido"));
                 alert("Erro: " + (err.message || "desconhecido"));
             }
         }
