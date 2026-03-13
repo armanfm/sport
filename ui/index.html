@@ -6,6 +6,7 @@
     <title>Sport Club do Recife | Token Economy</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
+        /* (mesmo CSS, mantive igual) */
         * {
             margin: 0;
             padding: 0;
@@ -82,7 +83,6 @@
             white-space: pre-line;
         }
 
-        /* Card de informação do token */
         .token-info {
             background: rgba(211, 47, 47, 0.1);
             border-radius: 16px;
@@ -323,6 +323,42 @@
             flex-wrap: wrap;
             gap: 10px;
         }
+
+        .tx-hash {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #4caf50;
+            word-break: break-all;
+            margin-top: 8px;
+        }
+
+        .loader {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .warning-box {
+            background: rgba(255, 152, 0, 0.1);
+            border: 1px solid #ff9800;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin: 8px 0;
+            font-size: 12px;
+            color: #ffb74d;
+        }
     </style>
 </head>
 <body>
@@ -331,15 +367,16 @@
         <div class="header">
             <div class="logo">🦁</div>
             <h1>Sport Club do Recife</h1>
-            <div class="subtitle">Economia Tokenizada • MVP</div>
+            <div class="subtitle">Economia Tokenizada • On-chain</div>
         </div>
 
         <!-- Status -->
         <div class="status-card">
             <div id="status">🔌 Conecte sua carteira para começar</div>
+            <div id="txHash" class="tx-hash" style="display: none;"></div>
         </div>
 
-        <!-- INFORMAÇÃO DO TOKEN (separada) -->
+        <!-- INFORMAÇÃO DO TOKEN -->
         <div class="token-info">
             <div class="flex-row">
                 <div>
@@ -353,11 +390,38 @@
             </div>
         </div>
 
-        <!-- CONEXÃO (só o botão) -->
+        <!-- CONEXÃO -->
         <div class="section-title">🔌 Conexão</div>
         <button class="btn-primary" id="btnConnect">
             🔗 CONECTAR CARTEIRA
         </button>
+
+        <!-- AVISO SOBRE ENDEREÇOS -->
+        <div class="warning-box">
+            ⚠️ Configure os endereços abaixo antes de usar:
+            <br/>
+            • Token: endereço do contrato ERC-20
+            <br/>
+            • Clube: carteira que receberá pagamentos/doações
+        </div>
+
+        <!-- Configurações (AGORA NO TOPO) -->
+        <div class="section-title">⚙️ Configurações</div>
+        <div class="action-card">
+            <div class="action-label">🪙 Contrato do Token</div>
+            <input id="tokenAddress" type="text" 
+                   value="0xYourTokenContractAddressHere"
+                   placeholder="Endereço do contrato do token" />
+            
+            <div class="action-label" style="margin-top: 12px;">🏦 Carteira do Clube (recebimentos)</div>
+            <input id="clubAddress" type="text" 
+                   value="0x2b1e32bfe330f423ce4ed85d7d4a5ebf8f7d15f8"
+                   placeholder="Endereço da carteira do clube" />
+            
+            <button class="btn-secondary" onclick="atualizarContrato()" style="margin-top: 12px;">
+                🔄 Atualizar Contrato
+            </button>
+        </div>
 
         <!-- Mercado de Tokens -->
         <div class="section-title">💰 Mercado de Tokens</div>
@@ -369,7 +433,7 @@
                     <input id="quantidadeCompra" type="number" min="1" value="100" placeholder="Qtd" />
                     <button class="btn-success" onclick="comprarTokens()">Comprar</button>
                 </div>
-                <div class="info-text">1 TK = R$ 1,00 • sem taxa</div>
+                <div class="info-text">Envia ETH para o clube • Recebe TK</div>
             </div>
 
             <!-- Vender -->
@@ -379,7 +443,7 @@
                     <input id="quantidadeVenda" type="number" min="1" value="50" placeholder="Qtd" />
                     <button class="btn-warning" onclick="venderTokens()">Vender</button>
                 </div>
-                <div class="info-text">1 TK = R$ 0,95 • taxa 5%</div>
+                <div class="info-text">Queima tokens • Clube envia ETH (5% taxa)</div>
             </div>
         </div>
 
@@ -438,37 +502,21 @@
             <button class="btn-secondary" onclick="gastar(50)">Votar Conselho<br><small>50 TK</small></button>
         </div>
 
-        <!-- Configurações -->
-        <div class="section-title">⚙️ Configurações</div>
-        <div class="action-card">
-            <div class="action-label">🏦 Carteira do Clube (recebimentos)</div>
-            <input id="clubAddress" type="text" 
-                   value="0x2b1e32bfe330f423ce4ed85d7d4a5ebf8f7d15f8"
-                   placeholder="Endereço do clube" />
-        </div>
-
         <!-- Footer -->
         <div class="footer">
-            <p>🚀 MVP - Economia Tokenizada do Sport Club do Recife</p>
-            <p>Versão Demo • Transações simuladas • Rede Sepolia</p>
+            <p>🚀 On-chain - Economia Tokenizada do Sport Club do Recife</p>
+            <p>Rede Sepolia • Transações reais</p>
             <p style="margin-top: 8px;">🦁 Uma nova forma de torcer e ajudar o clube</p>
         </div>
     </div>
 
     <script>
-        // ==================== CONSTANTES ====================
-        const TOKEN_ADDRESS = "0x2b1e32bfe330f423ce4ed85d7d4a5ebf8f7d15f8";
-        const ABI = [
-            "function balanceOf(address owner) view returns (uint256)",
-            "function transfer(address to, uint256 amount) returns (bool)",
-            "function decimals() view returns (uint8)",
-            "function symbol() view returns (string)"
-        ];
-
         // ==================== ELEMENTOS DOM ====================
         const btnConnect = document.getElementById("btnConnect");
         const statusEl = document.getElementById("status");
+        const txHashEl = document.getElementById("txHash");
         const clubAddressInput = document.getElementById("clubAddress");
+        const tokenAddressInput = document.getElementById("tokenAddress");
         const quantidadeCompraInput = document.getElementById("quantidadeCompra");
         const quantidadeVendaInput = document.getElementById("quantidadeVenda");
         const enderecoTransferenciaInput = document.getElementById("enderecoTransferencia");
@@ -483,12 +531,22 @@
         let tokenDecimals = 18;
         let tokenSymbol = "TK";
         let connecting = false;
+        let processingTx = false;
 
         // ==================== UTILITÁRIOS ====================
         function setStatus(text, isError = false) {
             statusEl.innerText = text;
             statusEl.style.color = isError ? '#f44336' : '#ffb74d';
             console.log(text);
+        }
+
+        function showTxHash(hash) {
+            txHashEl.style.display = 'block';
+            txHashEl.innerHTML = `🔗 Tx: <a href="https://sepolia.etherscan.io/tx/${hash}" target="_blank">${hash.slice(0, 10)}...${hash.slice(-8)}</a>`;
+        }
+
+        function hideTxHash() {
+            txHashEl.style.display = 'none';
         }
 
         function shortAddress(address) {
@@ -502,12 +560,81 @@
             });
         }
 
+        function getTokenAddress() {
+            const addr = tokenAddressInput.value.trim();
+            if (!ethers.utils.isAddress(addr)) {
+                throw new Error("Endereço do token inválido");
+            }
+            return addr;
+        }
+
+        function getClubAddress() {
+            const addr = clubAddressInput.value.trim();
+            if (!ethers.utils.isAddress(addr)) {
+                throw new Error("Endereço do clube inválido");
+            }
+            return addr;
+        }
+
         function getMetaMaskProvider() {
             if (!window.ethereum) return null;
             if (Array.isArray(window.ethereum.providers)) {
                 return window.ethereum.providers.find(p => p.isMetaMask) || window.ethereum.providers[0];
             }
             return window.ethereum;
+        }
+
+        async function checkBalance(amount) {
+            if (!tokenRead) throw new Error("Contrato não inicializado");
+            
+            const balance = await tokenRead.balanceOf(userAddress);
+            const formatted = ethers.utils.formatUnits(balance, tokenDecimals);
+            if (parseFloat(formatted) < amount) {
+                throw new Error(`Saldo insuficiente. Você tem ${formatted} ${tokenSymbol}`);
+            }
+            return balance;
+        }
+
+        // ==================== INICIALIZAÇÃO DO CONTRATO ====================
+        async function inicializarContrato() {
+            if (!provider || !signer) {
+                throw new Error("Conecte a carteira primeiro");
+            }
+
+            try {
+                const tokenAddress = getTokenAddress();
+                
+                tokenRead = new ethers.Contract(tokenAddress, ABI, provider);
+                tokenWrite = tokenRead.connect(signer);
+
+                // Tentar ler decimals e symbol para validar o contrato
+                try {
+                    tokenDecimals = await tokenRead.decimals();
+                    tokenSymbol = await tokenRead.symbol();
+                    setStatus(`✅ Contrato carregado: ${tokenSymbol} (${tokenDecimals} decimals)`);
+                } catch (e) {
+                    console.log("Usando valores padrão");
+                }
+
+                return true;
+            } catch (error) {
+                console.error(error);
+                setStatus(`❌ Erro ao inicializar contrato: ${error.message}`, true);
+                return false;
+            }
+        }
+
+        // Função para atualizar o contrato manualmente
+        async function atualizarContrato() {
+            if (!provider || !signer) {
+                alert("Conecte a carteira primeiro.");
+                return;
+            }
+
+            const success = await inicializarContrato();
+            if (success && userAddress) {
+                await atualizarSaldo();
+            }
         }
 
         // ==================== CONEXÃO ====================
@@ -561,19 +688,16 @@
                     }
                 }
 
-                // Inicializar contrato
-                tokenRead = new ethers.Contract(TOKEN_ADDRESS, ABI, provider);
-                tokenWrite = tokenRead.connect(signer);
-
-                try {
-                    tokenDecimals = await tokenRead.decimals();
-                    tokenSymbol = await tokenRead.symbol();
-                } catch (e) {
-                    console.log("Usando valores padrão");
+                // Inicializar contrato com o endereço do campo
+                const success = await inicializarContrato();
+                
+                if (success) {
+                    btnConnect.innerHTML = "✅ CONECTADO";
+                    hideTxHash();
+                    await atualizarSaldo();
+                } else {
+                    btnConnect.innerHTML = "🔗 CONECTAR CARTEIRA";
                 }
-
-                btnConnect.innerHTML = "✅ CONECTADO";
-                await atualizarSaldo();
 
             } catch (err) {
                 console.error(err);
@@ -604,62 +728,14 @@
         }
 
         // ==================== FUNÇÕES PRINCIPAIS ====================
-        async function comprarTokens() {
-            if (!tokenWrite || !userAddress) {
-                alert("Conecte a carteira primeiro.");
-                return;
-            }
-
-            const quantidade = quantidadeCompraInput.value;
-            if (!quantidade || parseInt(quantidade) <= 0) {
-                alert("Digite uma quantidade válida.");
-                return;
-            }
-
-            setStatus(`⏳ Comprando ${quantidade} ${tokenSymbol}...`);
-            
-            setTimeout(() => {
-                setStatus(
-                    `✅ Compra simulada!\n` +
-                    `Pagou: R$ ${formatMoney(parseFloat(quantidade))}\n` +
-                    `Recebeu: ${quantidade} ${tokenSymbol}`
-                );
-                alert(`✅ Compra simulada: R$ ${quantidade} → ${quantidade} TK`);
-                atualizarSaldo();
-            }, 1500);
-        }
-
-        async function venderTokens() {
-            if (!tokenWrite || !userAddress) {
-                alert("Conecte a carteira primeiro.");
-                return;
-            }
-
-            const quantidade = quantidadeVendaInput.value;
-            if (!quantidade || parseInt(quantidade) <= 0) {
-                alert("Digite uma quantidade válida.");
-                return;
-            }
-
-            const valorResgate = parseFloat(quantidade) * 0.95;
-            
-            setStatus(`⏳ Vendendo ${quantidade} ${tokenSymbol}...`);
-            
-            setTimeout(() => {
-                setStatus(
-                    `✅ Venda simulada!\n` +
-                    `Vendeu: ${quantidade} ${tokenSymbol}\n` +
-                    `Recebeu: R$ ${formatMoney(valorResgate)}\n` +
-                    `Taxa: R$ ${formatMoney(parseFloat(quantidade) * 0.05)}`
-                );
-                alert(`✅ Venda simulada: ${quantidade} TK → R$ ${formatMoney(valorResgate)}`);
-                atualizarSaldo();
-            }, 1500);
-        }
-
         async function transferirTokens() {
             if (!tokenWrite || !userAddress) {
                 alert("Conecte a carteira primeiro.");
+                return;
+            }
+
+            if (processingTx) {
+                alert("Transação em andamento. Aguarde.");
                 return;
             }
 
@@ -671,83 +747,177 @@
                 return;
             }
 
-            if (!quantidade || parseInt(quantidade) <= 0) {
+            if (!quantidade || parseFloat(quantidade) <= 0) {
                 alert("Quantidade inválida.");
                 return;
             }
 
-            setStatus(`⏳ Transferindo ${quantidade} ${tokenSymbol} para ${shortAddress(destino)}...`);
-            
-            setTimeout(() => {
-                setStatus(
-                    `✅ Transferência simulada!\n` +
-                    `${quantidade} ${tokenSymbol} enviados para ${shortAddress(destino)}`
-                );
-                alert(`✅ Transferência simulada: ${quantidade} TK enviados`);
+            try {
+                processingTx = true;
                 
-                enderecoTransferenciaInput.value = "";
-                quantidadeTransferenciaInput.value = "10";
-                atualizarSaldo();
-            }, 1500);
+                // Verificar saldo primeiro
+                await checkBalance(parseFloat(quantidade));
+                
+                const amount = ethers.utils.parseUnits(quantidade, tokenDecimals);
+                
+                setStatus(`⏳ Enviando ${quantidade} ${tokenSymbol} para ${shortAddress(destino)}...`);
+                
+                // Enviar transação
+                const tx = await tokenWrite.transfer(destino, amount);
+                
+                setStatus(`⏳ Transação enviada! Aguardando confirmação...`);
+                showTxHash(tx.hash);
+                
+                // Aguardar confirmação
+                const receipt = await tx.wait();
+                
+                if (receipt.status === 1) {
+                    setStatus(`✅ Transferência confirmada! ${quantidade} ${tokenSymbol} enviados.`);
+                    await atualizarSaldo();
+                    
+                    // Limpar campos
+                    enderecoTransferenciaInput.value = "";
+                    quantidadeTransferenciaInput.value = "10";
+                } else {
+                    throw new Error("Transação falhou na rede");
+                }
+                
+            } catch (error) {
+                console.error(error);
+                setStatus(`❌ Erro: ${error.message || "Falha na transferência"}`, true);
+                hideTxHash();
+            } finally {
+                processingTx = false;
+            }
         }
 
-        // ==================== FUNÇÕES DE DOAÇÃO ====================
+        // Função de doação (transferência real para o clube)
         async function doar(valor) {
             if (!tokenWrite || !userAddress) {
                 alert("Conecte a carteira primeiro.");
                 return;
             }
 
-            const clubAddress = clubAddressInput.value.trim();
-            
-            if (!ethers.utils.isAddress(clubAddress)) {
-                alert("Endereço do clube inválido.");
+            if (processingTx) {
+                alert("Transação em andamento. Aguarde.");
                 return;
             }
 
-            setStatus(`⏳ Doando R$ ${valor},00 (${valor} ${tokenSymbol}) para o clube...`);
-            
-            setTimeout(async () => {
-                setStatus(
-                    `✅ OBRIGADO! Doação realizada!\n` +
-                    `R$ ${valor},00 doados ao Sport Club do Recife\n` +
-                    `🦁 Sua contribuição faz a diferença!`
-                );
+            try {
+                const clubAddress = getClubAddress();
                 
-                alert(`🦁 MUITO OBRIGADO!\n\nVocê doou R$ ${valor},00 para o Sport Club do Recife.\nSua contribuição ajuda nas categorias de base e projetos sociais!`);
+                processingTx = true;
                 
-                await atualizarSaldo();
-            }, 2000);
-        }
-
-        async function doarPersonalizado() {
-            const valor = prompt("Quanto você quer doar? (R$)", "50");
-            if (valor && !isNaN(valor) && parseFloat(valor) > 0) {
-                await doar(parseFloat(valor));
+                // Verificar saldo
+                await checkBalance(valor);
+                
+                const amount = ethers.utils.parseUnits(valor.toString(), tokenDecimals);
+                
+                setStatus(`⏳ Doando ${valor} ${tokenSymbol} para o clube...`);
+                
+                // Transferir tokens para o clube
+                const tx = await tokenWrite.transfer(clubAddress, amount);
+                
+                setStatus(`⏳ Transação enviada! Aguardando confirmação...`);
+                showTxHash(tx.hash);
+                
+                const receipt = await tx.wait();
+                
+                if (receipt.status === 1) {
+                    setStatus(
+                        `✅ OBRIGADO! Doação de ${valor} ${tokenSymbol} realizada!\n` +
+                        `🦁 Sua contribuição faz a diferença!`
+                    );
+                    
+                    alert(`🦁 MUITO OBRIGADO!\n\nVocê doou ${valor} TK para o Sport Club do Recife.\nSua contribuição ajuda nas categorias de base e projetos sociais!`);
+                    
+                    await atualizarSaldo();
+                } else {
+                    throw new Error("Transação falhou na rede");
+                }
+                
+            } catch (error) {
+                console.error(error);
+                setStatus(`❌ Erro na doação: ${error.message}`, true);
+                hideTxHash();
+            } finally {
+                processingTx = false;
             }
         }
 
-        // ==================== FUNÇÃO DE GASTO ====================
+        // Função de gasto (pagar o clube por produtos/serviços)
         async function gastar(valor) {
             if (!tokenWrite || !userAddress) {
                 alert("Conecte a carteira primeiro.");
                 return;
             }
 
-            const clubAddress = clubAddressInput.value.trim();
-            
-            if (!ethers.utils.isAddress(clubAddress)) {
-                alert("Endereço do clube inválido.");
+            if (processingTx) {
+                alert("Transação em andamento. Aguarde.");
                 return;
             }
 
-            setStatus(`⏳ Processando pagamento de ${valor} ${tokenSymbol}...`);
+            try {
+                const clubAddress = getClubAddress();
+                
+                processingTx = true;
+                
+                // Verificar saldo
+                await checkBalance(valor);
+                
+                const amount = ethers.utils.parseUnits(valor.toString(), tokenDecimals);
+                
+                setStatus(`⏳ Processando pagamento de ${valor} ${tokenSymbol}...`);
+                
+                // Transferir tokens para o clube
+                const tx = await tokenWrite.transfer(clubAddress, amount);
+                
+                setStatus(`⏳ Transação enviada! Aguardando confirmação...`);
+                showTxHash(tx.hash);
+                
+                const receipt = await tx.wait();
+                
+                if (receipt.status === 1) {
+                    setStatus(`✅ Pagamento de ${valor} ${tokenSymbol} confirmado!`);
+                    alert(`✅ Pagamento de ${valor} TK realizado com sucesso!`);
+                    await atualizarSaldo();
+                } else {
+                    throw new Error("Transação falhou na rede");
+                }
+                
+            } catch (error) {
+                console.error(error);
+                setStatus(`❌ Erro no pagamento: ${error.message}`, true);
+                hideTxHash();
+            } finally {
+                processingTx = false;
+            }
+        }
+
+        async function doarPersonalizado() {
+            const valor = prompt("Quantos TK você quer doar?", "50");
+            if (valor && !isNaN(valor) && parseFloat(valor) > 0) {
+                await doar(parseFloat(valor));
+            }
+        }
+
+        // Funções de compra/venda (simuladas por enquanto - precisam de contrato específico)
+        async function comprarTokens() {
+            if (!userAddress) {
+                alert("Conecte a carteira primeiro.");
+                return;
+            }
             
-            setTimeout(async () => {
-                setStatus(`✅ Pagamento de ${valor} ${tokenSymbol} realizado!`);
-                alert(`✅ Pagamento de ${valor} TK confirmado!`);
-                await atualizarSaldo();
-            }, 2000);
+            alert("⚠️ Função de compra direta precisa de um contrato de venda (crowdsale).\n\nPor enquanto, use a doação ou aguarde o lançamento oficial.");
+        }
+
+        async function venderTokens() {
+            if (!userAddress) {
+                alert("Conecte a carteira primeiro.");
+                return;
+            }
+            
+            alert("⚠️ Função de venda/resgate precisa de lógica no contrato.\n\nEm breve você poderá resgatar seus tokens por reais!");
         }
 
         // ==================== EVENT LISTENERS ====================
@@ -759,6 +929,7 @@
                     userAddress = null;
                     btnConnect.innerHTML = "🔗 CONECTAR CARTEIRA";
                     setStatus("🔌 Carteira desconectada");
+                    hideTxHash();
                 } else {
                     userAddress = accounts[0];
                     setStatus("👆 Clique em conectar para atualizar");
@@ -772,5 +943,6 @@
     </script>
 </body>
 </html>
+
 
 
