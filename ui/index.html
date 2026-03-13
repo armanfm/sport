@@ -3,228 +3,460 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sport Club - Token</title>
+    <title>Sport Club do Recife | Token Economy</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
 
         body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             min-height: 100vh;
-            background: #111;
-            color: #fff;
-            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            color: #fff;
         }
 
         .card {
+            max-width: 700px;
             width: 100%;
-            max-width: 600px;
-            background: #2d2d2d;
-            border: 3px solid #d32f2f;
-            border-radius: 20px;
-            padding: 28px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(211, 47, 47, 0.3);
+            border-radius: 32px;
+            padding: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .header {
             text-align: center;
-            box-shadow: 0 0 24px rgba(0, 0, 0, 0.35);
+            margin-bottom: 32px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: #d32f2f;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 40px;
+            box-shadow: 0 10px 20px rgba(211, 47, 47, 0.3);
         }
 
         h1 {
-            margin: 0 0 8px;
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #ffb74d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #999;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+        }
+
+        .status-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #status {
+            color: #ffb74d;
+            font-size: 15px;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+
+        /* Card de informação do token */
+        .token-info {
+            background: rgba(211, 47, 47, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(211, 47, 47, 0.3);
+        }
+
+        .token-price {
             font-size: 28px;
-        }
-
-        p {
-            margin: 0 0 18px;
-            color: #ddd;
-        }
-
-        h2 {
-            margin: 22px 0 10px;
-            font-size: 20px;
-            color: #d32f2f;
-            border-bottom: 1px solid #444;
-            padding-bottom: 5px;
-        }
-
-        input, button, select {
-            width: 100%;
-            border: none;
-            border-radius: 12px;
-            padding: 14px 16px;
-            font-size: 17px;
-            margin-top: 8px;
-        }
-
-        input, select {
-            background: #1b1b1b;
-            color: #fff;
-            border: 1px solid #444;
-            outline: none;
-        }
-
-        input:focus, select:focus {
-            border-color: #d32f2f;
-        }
-
-        button {
-            background: #d32f2f;
-            color: #fff;
-            cursor: pointer;
             font-weight: bold;
-            transition: opacity 0.2s;
+            color: #4caf50;
         }
 
-        button:hover {
-            opacity: 0.9;
+        .token-fee {
+            font-size: 20px;
+            color: #ffb74d;
         }
 
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .info-label {
+            color: #999;
+            font-size: 14px;
         }
 
-        button.compra {
-            background: #2e7d32;
-        }
-
-        button.compra:hover {
-            background: #1b5e20;
-        }
-
-        button.venda {
-            background: #ed6c02;
-        }
-
-        button.venda:hover {
-            background: #b26a00;
-        }
-
-        button.transferir {
-            background: #0288d1;
-        }
-
-        button.transferir:hover {
-            background: #01579b;
-        }
-
-        .input-group {
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 24px 0 16px;
+            color: #fff;
             display: flex;
+            align-items: center;
             gap: 8px;
-            margin-top: 8px;
         }
 
-        .input-group input {
-            flex: 1;
-            margin-top: 0;
-        }
-
-        .input-group button {
-            width: auto;
-            padding: 14px 20px;
-            margin-top: 0;
+        .section-title span {
+            background: #d32f2f;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: white;
         }
 
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .action-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .action-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: #d32f2f;
+            transform: translateY(-2px);
+        }
+
+        .action-label {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        input, select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 14px 16px;
+            color: #fff;
+            font-size: 15px;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #d32f2f;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        input::placeholder {
+            color: #666;
+        }
+
+        button {
+            width: 100%;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(211, 47, 47, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(46, 125, 50, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ed6c02 0%, #b26a00 100%);
+        }
+
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #ff9800 0%, #ed6c02 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(237, 108, 2, 0.3);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #0288d1 0%, #01579b 100%);
+        }
+
+        .btn-info:hover {
+            background: linear-gradient(135deg, #03a9f4 0%, #0288d1 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(2, 136, 209, 0.3);
+        }
+
+        .btn-donate {
+            background: linear-gradient(135deg, #9c27b0 0%, #6a1b9a 100%);
+        }
+
+        .btn-donate:hover {
+            background: linear-gradient(135deg, #ba68c8 0%, #9c27b0 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(156, 39, 176, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .input-group input {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .input-group button {
+            width: auto;
+            white-space: nowrap;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(211, 47, 47, 0.2);
+            color: #ffb74d;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
             margin-top: 8px;
         }
 
-        #status {
-            margin-top: 16px;
-            color: #ffeb3b;
-            white-space: pre-line;
-            word-break: break-word;
-            line-height: 1.5;
-            min-height: 80px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            font-size: 14px;
+        .info-text {
+            font-size: 13px;
+            color: #777;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
-        .saldo-destaque {
-            font-size: 18px;
-            color: #4caf50;
-            font-weight: bold;
+        .footer {
+            margin-top: 32px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+        }
+
+        .highlight {
+            color: #d32f2f;
+            font-weight: 600;
+        }
+
+        .flex-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
     </style>
 </head>
 <body>
     <div class="card">
-        <h1>🦁 Sport Club do Recife</h1>
-        <p>Economia Tokenizada</p>
-        
-        <button id="btnConnect">CONECTAR CARTEIRA</button>
-        
-        <div id="status">Clique para conectar sua carteira.</div>
-        
-        <h2>💰 Comprar Tokens</h2>
-        <div class="input-group">
-            <input id="quantidadeCompra" type="number" min="1" value="100" placeholder="Quantidade de TK" />
-            <button class="compra" onclick="comprarTokens()">COMPRAR</button>
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🦁</div>
+            <h1>Sport Club do Recife</h1>
+            <div class="subtitle">Economia Tokenizada • MVP</div>
         </div>
-        <p style="font-size: 14px; margin-top: 5px; color: #aaa;">1 TK = R$ 1,00 (taxa 0%)</p>
-        
-        <h2>💸 Vender Tokens (Resgatar)</h2>
-        <div class="input-group">
-            <input id="quantidadeVenda" type="number" min="1" value="50" placeholder="Quantidade de TK" />
-            <button class="venda" onclick="venderTokens()">VENDER</button>
+
+        <!-- Status -->
+        <div class="status-card">
+            <div id="status">🔌 Conecte sua carteira para começar</div>
         </div>
-        <p style="font-size: 14px; margin-top: 5px; color: #aaa;">Resgate por R$ 0,95 por TK (taxa 5%)</p>
-        
-        <h2>🔄 Transferir Tokens</h2>
-        <input id="enderecoTransferencia" type="text" 
-               placeholder="Endereço da carteira de destino (0x...)" 
-               spellcheck="false" 
-               autocomplete="off" />
-        <div class="input-group">
-            <input id="quantidadeTransferencia" type="number" min="1" value="10" placeholder="Quantidade" />
-            <button class="transferir" onclick="transferirTokens()">TRANSFERIR</button>
+
+        <!-- INFORMAÇÃO DO TOKEN (separada) -->
+        <div class="token-info">
+            <div class="flex-row">
+                <div>
+                    <div class="info-label">💰 Preço do Token</div>
+                    <div class="token-price">1 TK = R$ 1,00</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="info-label">📊 Taxa de venda</div>
+                    <div class="token-fee">5%</div>
+                </div>
+            </div>
         </div>
-        
-        <h2>🏦 Carteira do Clube</h2>
-        <input id="clubAddress" type="text" 
-               placeholder="Endereço para pagamentos ao clube" 
-               spellcheck="false" 
-               autocomplete="off" 
-               value="0x2b1e32bfe330f423ce4ed85d7d4a5ebf8f7d15f8" />
-        
-        <h2>👥 Planos de Sócio</h2>
+
+        <!-- CONEXÃO (só o botão) -->
+        <div class="section-title">🔌 Conexão</div>
+        <button class="btn-primary" id="btnConnect">
+            🔗 CONECTAR CARTEIRA
+        </button>
+
+        <!-- Mercado de Tokens -->
+        <div class="section-title">💰 Mercado de Tokens</div>
         <div class="grid-2">
-            <button onclick="gastar(30)">Sócio Simples<br><small>30 TK</small></button>
-            <button onclick="gastar(50)">Sócio Plus<br><small>50 TK</small></button>
-            <button onclick="gastar(100)">Sócio Super<br><small>100 TK</small></button>
+            <!-- Comprar -->
+            <div class="action-card">
+                <div class="action-label">📥 COMPRAR</div>
+                <div class="input-group">
+                    <input id="quantidadeCompra" type="number" min="1" value="100" placeholder="Qtd" />
+                    <button class="btn-success" onclick="comprarTokens()">Comprar</button>
+                </div>
+                <div class="info-text">1 TK = R$ 1,00 • sem taxa</div>
+            </div>
+
+            <!-- Vender -->
+            <div class="action-card">
+                <div class="action-label">📤 VENDER (RESGATAR)</div>
+                <div class="input-group">
+                    <input id="quantidadeVenda" type="number" min="1" value="50" placeholder="Qtd" />
+                    <button class="btn-warning" onclick="venderTokens()">Vender</button>
+                </div>
+                <div class="info-text">1 TK = R$ 0,95 • taxa 5%</div>
+            </div>
         </div>
-        
-        <h2>🛍️ Loja & Serviços</h2>
+
+        <!-- Transferir -->
+        <div class="section-title">🔄 Transferência</div>
+        <div class="action-card">
+            <div class="input-group">
+                <input id="enderecoTransferencia" type="text" 
+                       placeholder="Endereço da carteira (0x...)" />
+            </div>
+            <div class="input-group">
+                <input id="quantidadeTransferencia" type="number" min="1" value="10" placeholder="Quantidade" />
+                <button class="btn-info" onclick="transferirTokens()">Transferir</button>
+            </div>
+        </div>
+
+        <!-- Doações -->
+        <div class="section-title">
+            🫶 AJUDE O CLUBE
+            <span>DOAÇÕES</span>
+        </div>
+        <div class="grid-3">
+            <button class="btn-donate" onclick="doar(10)">🤝 R$ 10</button>
+            <button class="btn-donate" onclick="doar(25)">💝 R$ 25</button>
+            <button class="btn-donate" onclick="doar(50)">⭐ R$ 50</button>
+        </div>
         <div class="grid-2">
-            <button onclick="gastar(200)">Camisa Oficial<br><small>200 TK</small></button>
-            <button onclick="gastar(150)">Cachecol<br><small>150 TK</small></button>
-            <button onclick="gastar(80)">Caneca<br><small>80 TK</small></button>
-            <button onclick="gastar(300)">Ingresso Mensal<br><small>300 TK</small></button>
+            <button class="btn-donate" onclick="doar(100)">👑 R$ 100 - Sócio Ouro</button>
+            <button class="btn-donate" onclick="doarPersonalizado()">✨ Valor Personalizado</button>
         </div>
-        
-        <h2>🗳️ Democracia do Clube</h2>
+        <div class="info-text" style="justify-content: center; margin-top: 8px;">
+            Sua doação ajuda nas categorias de base e projetos sociais 🦁
+        </div>
+
+        <!-- Planos de Sócio -->
+        <div class="section-title">👥 Seja Sócio</div>
+        <div class="grid-3">
+            <button class="btn-secondary" onclick="gastar(30)">Simples<br><small>30 TK</small></button>
+            <button class="btn-secondary" onclick="gastar(50)">Plus<br><small>50 TK</small></button>
+            <button class="btn-secondary" onclick="gastar(100)">Super<br><small>100 TK</small></button>
+        </div>
+
+        <!-- Loja -->
+        <div class="section-title">🛍️ Loja Oficial</div>
         <div class="grid-2">
-            <button onclick="gastar(100)">Votar Presidente<br><small>100 TK</small></button>
-            <button onclick="gastar(50)">Votar Conselho<br><small>50 TK</small></button>
+            <button class="btn-secondary" onclick="gastar(200)">👕 Camisa Oficial<br><small>200 TK</small></button>
+            <button class="btn-secondary" onclick="gastar(150)">🧣 Cachecol<br><small>150 TK</small></button>
+            <button class="btn-secondary" onclick="gastar(80)">☕ Caneca<br><small>80 TK</small></button>
+            <button class="btn-secondary" onclick="gastar(300)">🎫 Ingresso Mensal<br><small>300 TK</small></button>
         </div>
-        
-        <p style="margin-top: 20px; font-size: 12px; color: #666;">
-            ⚡ Tokens do Sport Club - Use, transfira ou resgate quando quiser
-        </p>
+
+        <!-- Democracia -->
+        <div class="section-title">🗳️ Democracia Rubro-negra</div>
+        <div class="grid-2">
+            <button class="btn-secondary" onclick="gastar(100)">Votar Presidente<br><small>100 TK</small></button>
+            <button class="btn-secondary" onclick="gastar(50)">Votar Conselho<br><small>50 TK</small></button>
+        </div>
+
+        <!-- Configurações -->
+        <div class="section-title">⚙️ Configurações</div>
+        <div class="action-card">
+            <div class="action-label">🏦 Carteira do Clube (recebimentos)</div>
+            <input id="clubAddress" type="text" 
+                   value="0x2b1e32bfe330f423ce4ed85d7d4a5ebf8f7d15f8"
+                   placeholder="Endereço do clube" />
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>🚀 MVP - Economia Tokenizada do Sport Club do Recife</p>
+            <p>Versão Demo • Transações simuladas • Rede Sepolia</p>
+            <p style="margin-top: 8px;">🦁 Uma nova forma de torcer e ajudar o clube</p>
+        </div>
     </div>
 
     <script>
-        // Constantes
+        // ==================== CONSTANTES ====================
         const TOKEN_ADDRESS = "0x2b1e32bfe330f423ce4ed85d7d4a5ebf8f7d15f8";
         const ABI = [
             "function balanceOf(address owner) view returns (uint256)",
@@ -233,7 +465,7 @@
             "function symbol() view returns (string)"
         ];
 
-        // Elementos DOM
+        // ==================== ELEMENTOS DOM ====================
         const btnConnect = document.getElementById("btnConnect");
         const statusEl = document.getElementById("status");
         const clubAddressInput = document.getElementById("clubAddress");
@@ -242,7 +474,7 @@
         const enderecoTransferenciaInput = document.getElementById("enderecoTransferencia");
         const quantidadeTransferenciaInput = document.getElementById("quantidadeTransferencia");
 
-        // Estado da aplicação
+        // ==================== ESTADO ====================
         let provider = null;
         let signer = null;
         let tokenRead = null;
@@ -252,12 +484,10 @@
         let tokenSymbol = "TK";
         let connecting = false;
 
-        // Endereço do "caixa" do clube (quem emite/vende os tokens)
-        const CLUB_TREASURY = "0x2b1e32bfe330f423ce4ed85d7d4a5ebf8f7d15f8";
-
-        // Utilitários
-        function setStatus(text) {
+        // ==================== UTILITÁRIOS ====================
+        function setStatus(text, isError = false) {
             statusEl.innerText = text;
+            statusEl.style.color = isError ? '#f44336' : '#ffb74d';
             console.log(text);
         }
 
@@ -265,58 +495,93 @@
             return address.slice(0, 6) + "..." + address.slice(-4);
         }
 
+        function formatMoney(value) {
+            return value.toLocaleString("pt-BR", { 
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2 
+            });
+        }
+
         function getMetaMaskProvider() {
             if (!window.ethereum) return null;
-            
-            if (Array.isArray(window.ethereum.providers) && window.ethereum.providers.length > 0) {
-                const metamask = window.ethereum.providers.find((p) => p.isMetaMask);
-                return metamask || window.ethereum.providers[0];
+            if (Array.isArray(window.ethereum.providers)) {
+                return window.ethereum.providers.find(p => p.isMetaMask) || window.ethereum.providers[0];
             }
-            
             return window.ethereum;
         }
 
-        function withTimeout(promise, ms, message) {
-            let timerId;
-            const timeoutPromise = new Promise((_, reject) => {
-                timerId = setTimeout(() => reject(new Error(message)), ms);
-            });
+        // ==================== CONEXÃO ====================
+        async function conectar() {
+            if (connecting) return;
             
-            return Promise.race([promise, timeoutPromise]).finally(() => {
-                clearTimeout(timerId);
-            });
-        }
+            const ethereum = getMetaMaskProvider();
+            
+            if (!ethereum) {
+                setStatus("❌ MetaMask não detectada. Instale a extensão.", true);
+                return;
+            }
 
-        async function switchToSepolia(ethereum) {
+            connecting = true;
+            btnConnect.disabled = true;
+            btnConnect.innerHTML = "⏳ CONECTANDO...";
+
             try {
-                await ethereum.request({
-                    method: "wallet_switchEthereumChain",
-                    params: [{ chainId: "0xaa36a7" }]
-                });
-                return true;
-            } catch (error) {
-                if (error.code === 4902) {
+                setStatus("⏳ Verificando carteira...");
+                
+                let accounts = await ethereum.request({ method: "eth_accounts" });
+                
+                if (!accounts || accounts.length === 0) {
+                    setStatus("⏳ Solicitando conexão...");
+                    accounts = await ethereum.request({ method: "eth_requestAccounts" });
+                }
+
+                if (!accounts || accounts.length === 0) {
+                    setStatus("❌ Nenhuma conta conectada.", true);
+                    return;
+                }
+
+                userAddress = accounts[0];
+                provider = new ethers.providers.Web3Provider(ethereum);
+                signer = provider.getSigner();
+
+                // Verificar rede
+                let network = await provider.getNetwork();
+                if (network.chainId !== 11155111) {
+                    setStatus("⏳ Trocando para Sepolia...");
                     try {
                         await ethereum.request({
-                            method: "wallet_addEthereumChain",
-                            params: [{
-                                chainId: "0xaa36a7",
-                                chainName: "Sepolia",
-                                nativeCurrency: {
-                                    name: "SepoliaETH",
-                                    symbol: "SEP",
-                                    decimals: 18
-                                },
-                                rpcUrls: ["https://rpc.sepolia.org"],
-                                blockExplorerUrls: ["https://sepolia.etherscan.io"]
-                            }]
+                            method: "wallet_switchEthereumChain",
+                            params: [{ chainId: "0xaa36a7" }]
                         });
-                        return true;
-                    } catch {
-                        return false;
+                        provider = new ethers.providers.Web3Provider(ethereum);
+                        signer = provider.getSigner();
+                    } catch (error) {
+                        setStatus("❌ Precisa estar na rede Sepolia", true);
+                        return;
                     }
                 }
-                return false;
+
+                // Inicializar contrato
+                tokenRead = new ethers.Contract(TOKEN_ADDRESS, ABI, provider);
+                tokenWrite = tokenRead.connect(signer);
+
+                try {
+                    tokenDecimals = await tokenRead.decimals();
+                    tokenSymbol = await tokenRead.symbol();
+                } catch (e) {
+                    console.log("Usando valores padrão");
+                }
+
+                btnConnect.innerHTML = "✅ CONECTADO";
+                await atualizarSaldo();
+
+            } catch (err) {
+                console.error(err);
+                setStatus("❌ Erro: " + (err.message || "desconhecido"), true);
+                btnConnect.innerHTML = "🔗 CONECTAR CARTEIRA";
+            } finally {
+                connecting = false;
+                btnConnect.disabled = false;
             }
         }
 
@@ -326,277 +591,143 @@
             try {
                 const balance = await tokenRead.balanceOf(userAddress);
                 const formatted = ethers.utils.formatUnits(balance, tokenDecimals);
-                const valorEmReais = Number(formatted) * 0.95; // Taxa de venda
+                const valorReais = parseFloat(formatted) * 0.95;
                 
                 setStatus(
-                    "✅ Carteira conectada: " + shortAddress(userAddress) +
-                    "\n📊 Rede: Sepolia" +
-                    "\n💰 Saldo: " + 
-                    Number(formatted).toLocaleString("pt-BR", { 
-                        maximumFractionDigits: 2 
-                    }) + " " + tokenSymbol +
-                    "\n💵 Valor de resgate: R$ " + 
-                    valorEmReais.toLocaleString("pt-BR", { 
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2 
-                    })
+                    `✅ Conectado: ${shortAddress(userAddress)}\n` +
+                    `💰 Saldo: ${Number(formatted).toLocaleString('pt-BR')} ${tokenSymbol}\n` +
+                    `💵 Valor de resgate: R$ ${formatMoney(valorReais)}`
                 );
             } catch (error) {
                 console.error("Erro ao atualizar saldo:", error);
             }
         }
 
-        async function conectar() {
-            if (connecting) return;
-            
-            const ethereum = getMetaMaskProvider();
-            
-            if (!ethereum) {
-                setStatus("❌ MetaMask não detectada. Instale a extensão.");
-                return;
-            }
-
-            connecting = true;
-            btnConnect.disabled = true;
-
-            try {
-                setStatus("⏳ Verificando carteira...");
-                
-                let accounts = await ethereum.request({ method: "eth_accounts" });
-                
-                if (!accounts || accounts.length === 0) {
-                    setStatus("⏳ Solicitando conexão da carteira...");
-                    
-                    accounts = await withTimeout(
-                        ethereum.request({ method: "eth_requestAccounts" }),
-                        15000,
-                        "A MetaMask não respondeu. Abra a extensão e conclua a solicitação."
-                    );
-                }
-
-                if (!accounts || accounts.length === 0) {
-                    setStatus("❌ Nenhuma conta conectada.");
-                    return;
-                }
-
-                userAddress = accounts[0];
-                provider = new ethers.providers.Web3Provider(ethereum);
-                signer = provider.getSigner();
-
-                let network = await provider.getNetwork();
-                
-                if (network.chainId !== 11155111) {
-                    setStatus("⏳ Rede errada. Tentando trocar para Sepolia...");
-                    
-                    const ok = await switchToSepolia(ethereum);
-                    
-                    if (!ok) {
-                        setStatus("❌ Não foi possível trocar para Sepolia.");
-                        return;
-                    }
-
-                    provider = new ethers.providers.Web3Provider(ethereum);
-                    signer = provider.getSigner();
-                    network = await provider.getNetwork();
-
-                    if (network.chainId !== 11155111) {
-                        setStatus("❌ Ainda não está na Sepolia.");
-                        return;
-                    }
-                }
-
-                tokenRead = new ethers.Contract(TOKEN_ADDRESS, ABI, provider);
-                tokenWrite = tokenRead.connect(signer);
-
-                try {
-                    tokenDecimals = await tokenRead.decimals();
-                } catch {
-                    tokenDecimals = 18;
-                }
-
-                try {
-                    tokenSymbol = await tokenRead.symbol();
-                } catch {
-                    tokenSymbol = "TK";
-                }
-
-                btnConnect.innerText = "✅ CONECTADO";
-                await atualizarSaldo();
-
-            } catch (err) {
-                console.error(err);
-                
-                if (err.code === 4001) {
-                    setStatus("❌ Você recusou a conexão na MetaMask.");
-                } else if (err.code === -32002) {
-                    setStatus("⏳ Solicitação pendente na MetaMask. Abra a extensão.");
-                } else {
-                    setStatus("❌ Erro ao conectar: " + (err.message || "desconhecido"));
-                }
-                
-            } finally {
-                connecting = false;
-                btnConnect.disabled = false;
-            }
-        }
-
-        // FUNÇÃO: Comprar tokens (simulação)
+        // ==================== FUNÇÕES PRINCIPAIS ====================
         async function comprarTokens() {
             if (!tokenWrite || !userAddress) {
                 alert("Conecte a carteira primeiro.");
                 return;
             }
 
-            const quantidade = quantidadeCompraInput.value.trim();
-            
+            const quantidade = quantidadeCompraInput.value;
             if (!quantidade || parseInt(quantidade) <= 0) {
                 alert("Digite uma quantidade válida.");
                 return;
             }
 
-            try {
-                setStatus("⏳ Processando compra de " + quantidade + " " + tokenSymbol + "...");
-                
-                // SIMULAÇÃO de compra
-                setTimeout(() => {
-                    setStatus(
-                        "✅ Compra realizada com sucesso!\n" +
-                        "Você pagou: R$ " + quantidade + "\n" +
-                        "Recebeu: " + quantidade + " " + tokenSymbol + "\n\n" +
-                        "Em produção, isso seria uma transação real no contrato."
-                    );
-                    
-                    alert("✅ Compra simulada! Você pagou R$ " + quantidade + 
-                          " e recebeu " + quantidade + " " + tokenSymbol);
-                }, 2000);
-
-            } catch (err) {
-                console.error(err);
-                setStatus("❌ Erro na compra: " + (err.message || "desconhecido"));
-                alert("Erro: " + (err.message || "desconhecido"));
-            }
+            setStatus(`⏳ Comprando ${quantidade} ${tokenSymbol}...`);
+            
+            setTimeout(() => {
+                setStatus(
+                    `✅ Compra simulada!\n` +
+                    `Pagou: R$ ${formatMoney(parseFloat(quantidade))}\n` +
+                    `Recebeu: ${quantidade} ${tokenSymbol}`
+                );
+                alert(`✅ Compra simulada: R$ ${quantidade} → ${quantidade} TK`);
+                atualizarSaldo();
+            }, 1500);
         }
 
-        // FUNÇÃO: Vender tokens (resgatar por dinheiro)
         async function venderTokens() {
             if (!tokenWrite || !userAddress) {
                 alert("Conecte a carteira primeiro.");
                 return;
             }
 
-            const quantidade = quantidadeVendaInput.value.trim();
-            
+            const quantidade = quantidadeVendaInput.value;
             if (!quantidade || parseInt(quantidade) <= 0) {
                 alert("Digite uma quantidade válida.");
                 return;
             }
 
-            try {
-                // Verifica se tem saldo suficiente
-                const balance = await tokenRead.balanceOf(userAddress);
-                const saldoAtual = ethers.utils.formatUnits(balance, tokenDecimals);
-                
-                if (parseFloat(saldoAtual) < parseFloat(quantidade)) {
-                    alert("Saldo insuficiente! Você tem apenas " + saldoAtual + " " + tokenSymbol);
-                    return;
-                }
-
-                const amount = ethers.utils.parseUnits(String(quantidade), tokenDecimals);
-                const valorResgate = parseFloat(quantidade) * 0.95; // 5% de taxa
-                
+            const valorResgate = parseFloat(quantidade) * 0.95;
+            
+            setStatus(`⏳ Vendendo ${quantidade} ${tokenSymbol}...`);
+            
+            setTimeout(() => {
                 setStatus(
-                    "⏳ Processando venda de " + quantidade + " " + tokenSymbol + "...\n" +
-                    "Valor de resgate: R$ " + valorResgate.toFixed(2)
+                    `✅ Venda simulada!\n` +
+                    `Vendeu: ${quantidade} ${tokenSymbol}\n` +
+                    `Recebeu: R$ ${formatMoney(valorResgate)}\n` +
+                    `Taxa: R$ ${formatMoney(parseFloat(quantidade) * 0.05)}`
                 );
-                
-                // SIMULAÇÃO de venda (transferir tokens de volta para o clube)
-                // Em produção, aqui você transferiria os tokens para o tesouro do clube
-                // e receberia ETH ou stablecoins de volta
-                
-                setTimeout(() => {
-                    setStatus(
-                        "✅ Venda simulada com sucesso!\n" +
-                        "Você vendeu: " + quantidade + " " + tokenSymbol + "\n" +
-                        "Recebeu: R$ " + valorResgate.toFixed(2) + "\n" +
-                        "Taxa do clube (5%): R$ " + (parseFloat(quantidade) * 0.05).toFixed(2)
-                    );
-                    
-                    alert("✅ Venda simulada! Você receberia R$ " + valorResgate.toFixed(2) + 
-                          " na sua conta (taxa de 5% do clube)");
-                }, 2000);
-
-            } catch (err) {
-                console.error(err);
-                setStatus("❌ Erro na venda: " + (err.message || "desconhecido"));
-                alert("Erro: " + (err.message || "desconhecido"));
-            }
+                alert(`✅ Venda simulada: ${quantidade} TK → R$ ${formatMoney(valorResgate)}`);
+                atualizarSaldo();
+            }, 1500);
         }
 
-        // FUNÇÃO: Transferir tokens para outra carteira
         async function transferirTokens() {
             if (!tokenWrite || !userAddress) {
                 alert("Conecte a carteira primeiro.");
                 return;
             }
 
-            const enderecoDestino = enderecoTransferenciaInput.value.trim();
-            const quantidade = quantidadeTransferenciaInput.value.trim();
-            
-            if (!ethers.utils.isAddress(enderecoDestino)) {
-                alert("Digite um endereço válido para transferência.");
+            const destino = enderecoTransferenciaInput.value.trim();
+            const quantidade = quantidadeTransferenciaInput.value;
+
+            if (!ethers.utils.isAddress(destino)) {
+                alert("Endereço inválido.");
                 return;
             }
 
             if (!quantidade || parseInt(quantidade) <= 0) {
-                alert("Digite uma quantidade válida.");
+                alert("Quantidade inválida.");
                 return;
             }
 
-            try {
-                // Verifica saldo
-                const balance = await tokenRead.balanceOf(userAddress);
-                const saldoAtual = ethers.utils.formatUnits(balance, tokenDecimals);
-                
-                if (parseFloat(saldoAtual) < parseFloat(quantidade)) {
-                    alert("Saldo insuficiente! Você tem apenas " + saldoAtual + " " + tokenSymbol);
-                    return;
-                }
-
-                const amount = ethers.utils.parseUnits(String(quantidade), tokenDecimals);
-                
+            setStatus(`⏳ Transferindo ${quantidade} ${tokenSymbol} para ${shortAddress(destino)}...`);
+            
+            setTimeout(() => {
                 setStatus(
-                    "⏳ Transferindo " + quantidade + " " + tokenSymbol + 
-                    " para " + shortAddress(enderecoDestino) + "..."
+                    `✅ Transferência simulada!\n` +
+                    `${quantidade} ${tokenSymbol} enviados para ${shortAddress(destino)}`
+                );
+                alert(`✅ Transferência simulada: ${quantidade} TK enviados`);
+                
+                enderecoTransferenciaInput.value = "";
+                quantidadeTransferenciaInput.value = "10";
+                atualizarSaldo();
+            }, 1500);
+        }
+
+        // ==================== FUNÇÕES DE DOAÇÃO ====================
+        async function doar(valor) {
+            if (!tokenWrite || !userAddress) {
+                alert("Conecte a carteira primeiro.");
+                return;
+            }
+
+            const clubAddress = clubAddressInput.value.trim();
+            
+            if (!ethers.utils.isAddress(clubAddress)) {
+                alert("Endereço do clube inválido.");
+                return;
+            }
+
+            setStatus(`⏳ Doando R$ ${valor},00 (${valor} ${tokenSymbol}) para o clube...`);
+            
+            setTimeout(async () => {
+                setStatus(
+                    `✅ OBRIGADO! Doação realizada!\n` +
+                    `R$ ${valor},00 doados ao Sport Club do Recife\n` +
+                    `🦁 Sua contribuição faz a diferença!`
                 );
                 
-                // TRANSFERÊNCIA REAL (quando conectado a um contrato real)
-                // const tx = await tokenWrite.transfer(enderecoDestino, amount);
+                alert(`🦁 MUITO OBRIGADO!\n\nVocê doou R$ ${valor},00 para o Sport Club do Recife.\nSua contribuição ajuda nas categorias de base e projetos sociais!`);
                 
-                // SIMULAÇÃO (para demonstração)
-                setTimeout(() => {
-                    setStatus(
-                        "✅ Transferência simulada com sucesso!\n" +
-                        "Enviado: " + quantidade + " " + tokenSymbol + "\n" +
-                        "Para: " + shortAddress(enderecoDestino) + "\n\n" +
-                        "Em produção, isso seria uma transação real na blockchain."
-                    );
-                    
-                    alert("✅ Transferência simulada! " + quantidade + " " + tokenSymbol + 
-                          " enviados para " + shortAddress(enderecoDestino));
-                    
-                    // Limpar campos
-                    enderecoTransferenciaInput.value = "";
-                    quantidadeTransferenciaInput.value = "10";
-                }, 2000);
+                await atualizarSaldo();
+            }, 2000);
+        }
 
-            } catch (err) {
-                console.error(err);
-                setStatus("❌ Erro na transferência: " + (err.message || "desconhecido"));
-                alert("Erro: " + (err.message || "desconhecido"));
+        async function doarPersonalizado() {
+            const valor = prompt("Quanto você quer doar? (R$)", "50");
+            if (valor && !isNaN(valor) && parseFloat(valor) > 0) {
+                await doar(parseFloat(valor));
             }
         }
 
-        // FUNÇÃO: Gastar tokens com produtos/serviços
+        // ==================== FUNÇÃO DE GASTO ====================
         async function gastar(valor) {
             if (!tokenWrite || !userAddress) {
                 alert("Conecte a carteira primeiro.");
@@ -606,62 +737,31 @@
             const clubAddress = clubAddressInput.value.trim();
             
             if (!ethers.utils.isAddress(clubAddress)) {
-                alert("Digite um endereço válido na carteira do clube.");
+                alert("Endereço do clube inválido.");
                 return;
             }
 
-            try {
-                // Verifica saldo
-                const balance = await tokenRead.balanceOf(userAddress);
-                const saldoAtual = ethers.utils.formatUnits(balance, tokenDecimals);
-                
-                if (parseFloat(saldoAtual) < valor) {
-                    alert("Saldo insuficiente! Você tem apenas " + saldoAtual + " " + tokenSymbol);
-                    return;
-                }
-
-                const amount = ethers.utils.parseUnits(String(valor), tokenDecimals);
-                
-                setStatus("⏳ Enviando " + valor + " " + tokenSymbol + "...");
-                
-                // TRANSFERÊNCIA REAL
-                const tx = await tokenWrite.transfer(clubAddress, amount);
-                
-                setStatus(
-                    "⏳ Transação enviada.\n" +
-                    "Hash: " + tx.hash + "\n" +
-                    "Aguardando confirmação..."
-                );
-
-                await tx.wait();
-                
-                setStatus("✅ Pagamento confirmado!");
-                alert("✅ Pagamento de " + valor + " " + tokenSymbol + " realizado com sucesso!");
+            setStatus(`⏳ Processando pagamento de ${valor} ${tokenSymbol}...`);
+            
+            setTimeout(async () => {
+                setStatus(`✅ Pagamento de ${valor} ${tokenSymbol} realizado!`);
+                alert(`✅ Pagamento de ${valor} TK confirmado!`);
                 await atualizarSaldo();
-
-            } catch (err) {
-                console.error(err);
-                setStatus("❌ Erro no pagamento: " + (err.message || "desconhecido"));
-                alert("Erro: " + (err.message || "desconhecido"));
-            }
+            }, 2000);
         }
 
-        // Event Listeners
+        // ==================== EVENT LISTENERS ====================
         btnConnect.addEventListener("click", conectar);
 
         if (window.ethereum) {
             window.ethereum.on("accountsChanged", (accounts) => {
                 if (!accounts || accounts.length === 0) {
                     userAddress = null;
-                    provider = null;
-                    signer = null;
-                    tokenRead = null;
-                    tokenWrite = null;
-                    btnConnect.innerText = "CONECTAR CARTEIRA";
-                    setStatus("Carteira desconectada.");
+                    btnConnect.innerHTML = "🔗 CONECTAR CARTEIRA";
+                    setStatus("🔌 Carteira desconectada");
                 } else {
                     userAddress = accounts[0];
-                    setStatus("Conta alterada. Clique em conectar para atualizar.");
+                    setStatus("👆 Clique em conectar para atualizar");
                 }
             });
 
@@ -672,6 +772,5 @@
     </script>
 </body>
 </html>
-
 
 
