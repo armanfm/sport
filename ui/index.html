@@ -1,183 +1,400 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<title>Sport Club - Token</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sport Club - Token</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+        body {
+            min-height: 100vh;
+            background: #111;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
 
-<style>
+        .card {
+            width: 100%;
+            max-width: 520px;
+            background: #2d2d2d;
+            border: 3px solid #d32f2f;
+            border-radius: 20px;
+            padding: 28px;
+            text-align: center;
+            box-shadow: 0 0 24px rgba(0, 0, 0, 0.35);
+        }
 
-body{
-font-family:Arial;
-background:#111;
-color:white;
-text-align:center;
-padding:40px;
-}
+        h1 {
+            margin: 0 0 8px;
+            font-size: 28px;
+        }
 
-.card{
-background:#2d2d2d;
-padding:40px;
-border-radius:20px;
-border:3px solid #d32f2f;
-display:inline-block;
-max-width:500px;
-}
+        p {
+            margin: 0 0 18px;
+            color: #ddd;
+        }
 
-button{
-background:#d32f2f;
-color:white;
-border:none;
-padding:15px;
-border-radius:10px;
-cursor:pointer;
-font-size:18px;
-margin:5px;
-width:100%;
-}
+        h2 {
+            margin: 22px 0 10px;
+            font-size: 20px;
+        }
 
-button:hover{
-background:#ff3b3b;
-}
+        input, button {
+            width: 100%;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 17px;
+            margin-top: 8px;
+        }
 
-#status{
-margin-top:20px;
-font-size:18px;
-color:#ffeb3b;
-white-space:pre-line;
-}
+        input {
+            background: #1b1b1b;
+            color: #fff;
+            border: 1px solid #444;
+            outline: none;
+        }
 
-.section{
-margin-top:25px;
-}
+        input:focus {
+            border-color: #d32f2f;
+        }
 
-</style>
+        button {
+            background: #d32f2f;
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #status {
+            margin-top: 16px;
+            color: #ffeb3b;
+            white-space: pre-line;
+            word-break: break-word;
+            line-height: 1.5;
+            min-height: 60px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+    </style>
 </head>
-
 <body>
+    <div class="card">
+        <h1>🦁 Sport Club do Recife</h1>
+        <p>Economia Tokenizada</p>
+        
+        <button id="btnConnect">CONECTAR CARTEIRA</button>
+        
+        <div id="status">Clique para conectar sua carteira.</div>
+        
+        <h2>Carteira do Clube</h2>
+        <input id="clubAddress" type="text" 
+               placeholder="0x..." 
+               spellcheck="false" 
+               autocomplete="off" 
+               value="" />
+        
+        <h2>Sócios</h2>
+        <button onclick="gastar(30)">Sócio Simples - 30 TK</button>
+        <button onclick="gastar(50)">Sócio Plus - 50 TK</button>
+        <button onclick="gastar(100)">Sócio Super - 100 TK</button>
+        
+        <h2>Loja</h2>
+        <button onclick="gastar(200)">Comprar Camisa - 200 TK</button>
+        
+        <h2>Demo</h2>
+        <button onclick="gastar(100)">Votar Presidente - 100 TK</button>
+    </div>
 
-<div class="card">
+    <script>
+        // Constantes
+        const TOKEN_ADDRESS = "0x2b1e32bfe330f423ce4ed85d7d4a5ebf8f7d15f8";
+        const ABI = [
+            "function balanceOf(address owner) view returns (uint256)",
+            "function transfer(address to, uint256 amount) returns (bool)",
+            "function decimals() view returns (uint8)",
+            "function symbol() view returns (string)"
+        ];
 
-<h1>🦁 Sport Club do Recife</h1>
-<p>Economia Tokenizada</p>
+        // Elementos DOM
+        const btnConnect = document.getElementById("btnConnect");
+        const statusEl = document.getElementById("status");
+        const clubAddressInput = document.getElementById("clubAddress");
 
-<button id="btn">CONECTAR CARTEIRA</button>
+        // Estado da aplicação
+        let provider = null;
+        let signer = null;
+        let tokenRead = null;
+        let tokenWrite = null;
+        let userAddress = null;
+        let tokenDecimals = 18;
+        let tokenSymbol = "TK";
+        let connecting = false;
 
-<div id="status">Carteira não conectada</div>
+        // Utilitários
+        function setStatus(text) {
+            statusEl.innerText = text;
+            console.log(text);
+        }
 
-<div class="section">
-<h2>Sócios</h2>
+        function shortAddress(address) {
+            return address.slice(0, 6) + "..." + address.slice(-4);
+        }
 
-<button onclick="gastar(30)">Sócio Simples - 30 TK</button>
-<button onclick="gastar(50)">Sócio Plus - 50 TK</button>
-<button onclick="gastar(100)">Sócio Super - 100 TK</button>
+        function getMetaMaskProvider() {
+            if (!window.ethereum) return null;
+            
+            if (Array.isArray(window.ethereum.providers) && window.ethereum.providers.length > 0) {
+                const metamask = window.ethereum.providers.find((p) => p.isMetaMask);
+                return metamask || window.ethereum.providers[0];
+            }
+            
+            return window.ethereum;
+        }
 
-</div>
+        function withTimeout(promise, ms, message) {
+            let timerId;
+            const timeoutPromise = new Promise((_, reject) => {
+                timerId = setTimeout(() => reject(new Error(message)), ms);
+            });
+            
+            return Promise.race([promise, timeoutPromise]).finally(() => {
+                clearTimeout(timerId);
+            });
+        }
 
-<div class="section">
-<h2>Loja</h2>
+        async function switchToSepolia(ethereum) {
+            try {
+                await ethereum.request({
+                    method: "wallet_switchEthereumChain",
+                    params: [{ chainId: "0xaa36a7" }]
+                });
+                return true;
+            } catch (error) {
+                if (error.code === 4902) {
+                    try {
+                        await ethereum.request({
+                            method: "wallet_addEthereumChain",
+                            params: [{
+                                chainId: "0xaa36a7",
+                                chainName: "Sepolia",
+                                nativeCurrency: {
+                                    name: "SepoliaETH",
+                                    symbol: "SEP",
+                                    decimals: 18
+                                },
+                                rpcUrls: ["https://rpc.sepolia.org"],
+                                blockExplorerUrls: ["https://sepolia.etherscan.io"]
+                            }]
+                        });
+                        return true;
+                    } catch {
+                        return false;
+                    }
+                }
+                return false;
+            }
+        }
 
-<button onclick="gastar(200)">Comprar Camisa - 200 TK</button>
+        async function atualizarSaldo() {
+            if (!tokenRead || !userAddress) return;
+            
+            try {
+                const balance = await tokenRead.balanceOf(userAddress);
+                const formatted = ethers.utils.formatUnits(balance, tokenDecimals);
+                
+                setStatus(
+                    "Carteira conectada:\n" +
+                    shortAddress(userAddress) +
+                    "\nRede: Sepolia" +
+                    "\nSaldo: " + 
+                    Number(formatted).toLocaleString("pt-BR", { 
+                        maximumFractionDigits: 4 
+                    }) + 
+                    " " + tokenSymbol
+                );
+            } catch (error) {
+                console.error("Erro ao atualizar saldo:", error);
+            }
+        }
 
-</div>
+        async function conectar() {
+            if (connecting) return;
+            
+            const ethereum = getMetaMaskProvider();
+            
+            if (!ethereum) {
+                setStatus("MetaMask não detectada. Instale a extensão.");
+                return;
+            }
 
-<div class="section">
-<h2>Demo</h2>
+            connecting = true;
+            btnConnect.disabled = true;
 
-<button onclick="gastar(100)">Votar Presidente - 100 TK</button>
+            try {
+                setStatus("Verificando carteira...");
+                
+                let accounts = await ethereum.request({ method: "eth_accounts" });
+                
+                if (!accounts || accounts.length === 0) {
+                    setStatus("Solicitando conexão da carteira...");
+                    
+                    accounts = await withTimeout(
+                        ethereum.request({ method: "eth_requestAccounts" }),
+                        15000,
+                        "A MetaMask não respondeu. Abra a extensão e conclua a solicitação."
+                    );
+                }
 
-</div>
+                if (!accounts || accounts.length === 0) {
+                    setStatus("Nenhuma conta conectada.");
+                    return;
+                }
 
-</div>
+                userAddress = accounts[0];
+                provider = new ethers.providers.Web3Provider(ethereum);
+                signer = provider.getSigner();
 
-<script>
+                let network = await provider.getNetwork();
+                
+                if (network.chainId !== 11155111) {
+                    setStatus("Rede errada. Tentando trocar para Sepolia...");
+                    
+                    const ok = await switchToSepolia(ethereum);
+                    
+                    if (!ok) {
+                        setStatus("Não foi possível trocar para Sepolia.");
+                        return;
+                    }
 
-const TOKEN_ADDRESS = "0x2b1e32bfe330f423ce4ed85d7d4a5ebf8f7d15f8"
-const CLUB_ADDRESS = "COLOQUE_AQUI_O_ENDERECO_DO_CLUBE"
+                    provider = new ethers.providers.Web3Provider(ethereum);
+                    signer = provider.getSigner();
+                    network = await provider.getNetwork();
 
-const ABI = [
-"function balanceOf(address owner) view returns (uint256)",
-"function transfer(address to, uint amount) returns (bool)",
-"function decimals() view returns (uint8)"
-]
+                    if (network.chainId !== 11155111) {
+                        setStatus("Ainda não está na Sepolia.");
+                        return;
+                    }
+                }
 
-let provider
-let signer
-let token
-let address
+                tokenRead = new ethers.Contract(TOKEN_ADDRESS, ABI, provider);
+                tokenWrite = tokenRead.connect(signer);
 
-const status = document.getElementById("status")
+                try {
+                    tokenDecimals = await tokenRead.decimals();
+                } catch {
+                    tokenDecimals = 18;
+                }
 
-document.getElementById('btn').onclick = async () => {
+                try {
+                    tokenSymbol = await tokenRead.symbol();
+                } catch {
+                    tokenSymbol = "TK";
+                }
 
-if (!window.ethereum) {
-alert("MetaMask não detectada")
-return
-}
+                btnConnect.innerText = "CONECTADO";
+                await atualizarSaldo();
 
-try {
+            } catch (err) {
+                console.error(err);
+                
+                if (err.code === 4001) {
+                    setStatus("Você recusou a conexão na MetaMask.");
+                } else if (err.code === -32002) {
+                    setStatus("Solicitação pendente na MetaMask. Abra a extensão.");
+                } else {
+                    setStatus("Erro ao conectar: " + (err.message || "desconhecido"));
+                }
+                
+            } finally {
+                connecting = false;
+                btnConnect.disabled = false;
+            }
+        }
 
-provider = new ethers.providers.Web3Provider(window.ethereum)
+        async function gastar(valor) {
+            if (!tokenWrite || !userAddress) {
+                alert("Conecte a carteira primeiro.");
+                return;
+            }
 
-await provider.send("eth_requestAccounts", [])
+            const clubAddress = clubAddressInput.value.trim();
+            
+            if (!ethers.utils.isAddress(clubAddress)) {
+                alert("Digite um endereço válido na carteira do clube.");
+                return;
+            }
 
-signer = provider.getSigner()
+            try {
+                const amount = ethers.utils.parseUnits(String(valor), tokenDecimals);
+                
+                setStatus("Enviando " + valor + " " + tokenSymbol + "...");
+                
+                const tx = await tokenWrite.transfer(clubAddress, amount);
+                
+                setStatus(
+                    "Transação enviada.\n" +
+                    "Hash: " + tx.hash + "\n" +
+                    "Aguardando confirmação..."
+                );
 
-address = await signer.getAddress()
+                await tx.wait();
+                
+                alert("Pagamento enviado com sucesso!");
+                await atualizarSaldo();
 
-token = new ethers.Contract(TOKEN_ADDRESS, ABI, provider)
+            } catch (err) {
+                console.error(err);
+                setStatus("Erro no pagamento: " + (err.message || "desconhecido"));
+                alert("Erro: " + (err.message || "desconhecido"));
+            }
+        }
 
-const balance = await token.balanceOf(address)
+        // Event Listeners
+        btnConnect.addEventListener("click", conectar);
 
-const decimals = await token.decimals()
+        if (window.ethereum) {
+            window.ethereum.on("accountsChanged", (accounts) => {
+                if (!accounts || accounts.length === 0) {
+                    userAddress = null;
+                    provider = null;
+                    signer = null;
+                    tokenRead = null;
+                    tokenWrite = null;
+                    btnConnect.innerText = "CONECTAR CARTEIRA";
+                    setStatus("Carteira desconectada.");
+                } else {
+                    userAddress = accounts[0];
+                    setStatus("Conta alterada. Clique em conectar para atualizar.");
+                }
+            });
 
-const saldo = ethers.utils.formatUnits(balance, decimals)
-
-status.innerText =
-"Carteira conectada:\n"+address+"\nSaldo: "+saldo+" TK"
-
-document.getElementById("btn").innerText = "CONECTADO"
-
-} catch(err){
-
-alert("Erro: "+err.message)
-
-}
-
-}
-
-async function gastar(valor){
-
-if(!signer){
-alert("Conecte a carteira primeiro")
-return
-}
-
-try{
-
-const tokenSigner = token.connect(signer)
-
-const decimals = await token.decimals()
-
-const amount = ethers.utils.parseUnits(valor.toString(), decimals)
-
-const tx = await tokenSigner.transfer(CLUB_ADDRESS, amount)
-
-await tx.wait()
-
-alert("Pagamento enviado!")
-
-}catch(err){
-
-alert("Erro: "+err.message)
-
-}
-
-}
-
-</script>
-
+            window.ethereum.on("chainChanged", () => {
+                window.location.reload();
+            });
+        }
+    </script>
 </body>
 </html>
 
